@@ -23,6 +23,7 @@ def authorize(*required_scopes: str):
         return add_dependencies(Depends(dependency))(func)
     return decorator
 
+
 @app.put("/users/{user_id}")
 @authorize("users:write")
 def update_user(*, user_id: int, user_update: UserUpdate):
