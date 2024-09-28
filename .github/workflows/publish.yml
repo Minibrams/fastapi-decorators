@@ -1,5 +1,9 @@
 name: Publish to PyPI
 
+on:
+  release:
+    types: [created]
+
 jobs:
   publish:
     runs-on: ubuntu-latest
