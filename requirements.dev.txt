@@ -1,3 +1,4 @@
+pyright
 setuptools
 fastapi
 uvicorn

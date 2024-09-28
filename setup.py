@@ -5,7 +5,7 @@ with open('README.md') as fp:
 
 setuptools.setup(
     name="fastapi-decorators",
-    version="0.0.5",
+    version="0.0.6",
     author="Anders Brams",
     author_email="anders@brams.dk",
     description="Decorate FastAPI endpoints with custom decorators.",
@@ -23,9 +23,7 @@ setuptools.setup(
     package_dir={
         '': 'src'
     },
-    install_requires=[
-        "fastapi",
-    ],
+    install_requires=[],
     python_requires='>=3',
     classifiers=[
         "Programming Language :: Python :: 3",
