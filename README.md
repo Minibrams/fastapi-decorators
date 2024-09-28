@@ -11,6 +11,9 @@ pip install fastapi-decorators
 Create a simple decorator that rejects unauthorized requests:
 
 ```python
+from fastapi_decorators import add_dependencies
+from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/api/v1/auth/login", 
