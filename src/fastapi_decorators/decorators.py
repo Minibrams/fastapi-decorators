@@ -78,7 +78,7 @@ def add_dependencies(*dependencies: Any) -> Callable:
         wrapper = (
             async_wrapper if asyncio.iscoroutinefunction(func) else sync_wrapper
         )
-        wrapper.__signature__ = sig.replace(parameters=tuple(new_parameters.values()))
+        wrapper.__signature__ = sig.replace(parameters=tuple(new_parameters.values()))  # type: ignore
         return wrapper
 
     return decorator
