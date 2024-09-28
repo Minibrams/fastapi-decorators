@@ -1,0 +1,1 @@
+from .decorators import add_dependencies
