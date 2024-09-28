@@ -4,3 +4,4 @@ fastapi
 uvicorn
 wheel
 twine
+httpx
