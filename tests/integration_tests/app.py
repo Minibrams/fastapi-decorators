@@ -31,22 +31,56 @@ def log_request(user=Depends(get_current_user)):
     logger = logging.getLogger("app")
     logger.info(f"User {user['username']} made a request")
 
+def get_current_user_decorator():
+    def decorator(func):
+        return add_dependencies(Depends(get_current_user))(func)
+    return decorator
+
+def require_admin_decorator():
+    def decorator(func):
+        return add_dependencies(Depends(require_admin))(func)
+    return decorator
+
+def log_request_decorator():
+    def decorator(func):
+        return add_dependencies(Depends(log_request))(func)
+    return decorator
+
 @app.get("/public")
 def read_public():
     return {"message": "This is a public endpoint"}
 
-@app.get("/users/me")
+@app.get("/plain/users/me")
 @add_dependencies(Depends(get_current_user))
 def read_current_user(user=Depends(get_current_user)):
     return {"user": user}
 
-@app.get("/admin")
+@app.get("/plain/admin")
 @add_dependencies(Depends(require_admin), Depends(log_request))
 def read_admin_data():
     return {"message": "This is admin data"}
 
-@app.get("/error")
+@app.get("/plain/error")
 @add_dependencies(Depends(log_request))
+def error_endpoint():
+    raise HTTPException(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        detail="Internal Server Error",
+    )
+
+@app.get("/decorated/users/me")
+@get_current_user_decorator()
+def read_current_user(user=Depends(get_current_user)):
+    return {"user": user}
+
+@app.get("/decorated/admin")
+@require_admin_decorator()
+@log_request_decorator()
+def read_admin_data():
+    return {"message": "This is admin data"}
+
+@app.get("/decorated/error")
+@log_request_decorator()
 def error_endpoint():
     raise HTTPException(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
