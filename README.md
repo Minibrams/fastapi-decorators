@@ -39,3 +39,6 @@ The decorator can be used like so:
 def update_user(*, user_id: int, user_update: UserUpdate):
     ...
 ```
+
+# Credits
+Inspired by solutions suggested by [@gocreating](https://github.com/gocreating) and [@dmontagu](https://github.com/dmontagu).
