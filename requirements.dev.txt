@@ -5,3 +5,4 @@ uvicorn
 wheel
 twine
 httpx
+pytest
