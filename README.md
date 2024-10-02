@@ -60,6 +60,7 @@ def authorize(*required_scopes: str):
         pass
     return add_dependencies(Depends(dependency))(func)
 
+
 @app.put("/users/{user_id}")
 @authorize("users:write")
 def update_user(*, user_id: int, user_update: UserUpdate):
