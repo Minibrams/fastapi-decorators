@@ -5,7 +5,7 @@ with open('README.md') as fp:
 
 setuptools.setup(
     name="fastapi-decorators",
-    version="1.0.1",
+    version="1.0.2",
     author="Anders Brams",
     author_email="anders@brams.dk",
     description="Create decorators that leverage FastAPI's `Depends()` and built-in dependencies, enabling you to inject dependencies directly into your decorators.",
