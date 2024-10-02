@@ -28,7 +28,7 @@ from fastapi import Request, Depends
 def log_request():
     def dependency(request: Request):
         print(f"Received request: {request.method} {request.url}")
-    return add_dependencies(Depends(dependency))(func)
+    return add_dependencies(Depends(dependency))
 
 @app.get("/items/{item_id}")
 @log_request()
@@ -58,7 +58,7 @@ def authorize(*required_scopes: str):
 
         # Check scopes and permissions
         pass
-    return add_dependencies(Depends(dependency))(func)
+    return add_dependencies(Depends(dependency))
 
 
 @app.put("/users/{user_id}")
@@ -78,7 +78,7 @@ from fastapi import Response, Depends
 def add_custom_header(name: str, value: str):
     def dependency(response: Response):
         response.headers[name] = value
-    return add_dependencies(Depends(dependency))(func)
+    return add_dependencies(Depends(dependency))
 
 @app.get("/data")
 @add_custom_header("X-Custom-Header", "MyValue")
@@ -110,7 +110,7 @@ def rate_limit(max_calls: int, period: int):
             raise HTTPException(status_code=429, detail="Too Many Requests")
         calls += 1
         rate_limit_store[ip_address] = (calls, last_reset)
-    return add_dependencies(Depends(dependency))(func)
+    return add_dependencies(Depends(dependency))
 
 def get_ip_address(request: Request):
     return request.client.host
@@ -141,7 +141,7 @@ def handle_errors():
             # Optionally print the traceback
             traceback.print_exc()
 
-    return add_dependencies(Depends(dependency))(func)
+    return add_dependencies(Depends(dependency))
 
 @app.get("/may-fail")
 @handle_errors()
