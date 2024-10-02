@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 from functools import wraps
 from inspect import Parameter, signature
+from types import MappingProxyType
 from typing import Any, Callable, Dict, Tuple, TypeVar, cast
 
 F = TypeVar('F', bound=Callable[..., Any])
@@ -61,7 +62,7 @@ def add_dependencies(*dependencies: Any) -> Callable[[F], F]:
 
 def _add_dependency_parameters(
     dependencies: Tuple[Any, ...],
-    original_parameters: Dict[str, Parameter],
+    original_parameters: MappingProxyType[str, Parameter],
 ) -> Dict[str, Parameter]:
     """
     Adds dependency parameters to the function's parameters.
@@ -111,7 +112,7 @@ def _generate_dependency_name(
 
 def _create_wrapper(
     func: Callable, 
-    original_parameters: Dict[str, Parameter],
+    original_parameters: MappingProxyType[str, Parameter],
 ) -> Callable:
     """
     Creates a wrapper function that filters out dependency arguments.
