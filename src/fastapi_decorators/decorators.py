@@ -26,15 +26,13 @@ def add_dependencies(*dependencies: Any) -> Callable[[F], F]:
 
     ```python
     def authorize(*required_scopes: str):
-        def decorator(func: Callable):
-            async def dependency(
-                x_auth_token: str = Header(None),
-                db_session: Session = Depends(get_db),
-            ):
-                # Authorization logic here
-                ...
-            return add_dependencies(Depends(dependency))(func)
-        return decorator
+        async def dependency(
+            x_auth_token: str = Header(None),
+            db_session: Session = Depends(get_db),
+        ):
+            # Authorization logic here
+            ...
+        return add_dependencies(Depends(dependency))(func)
     ```
 
     **Using the Custom Decorator:**
