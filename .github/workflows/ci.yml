@@ -27,13 +27,9 @@ jobs:
         run: |
           pip install -e .
           pip install -r requirements.dev.txt
-          pip install pyright
 
       - name: Perform static type checking with Pyright
         run: pyright src/
 
-      - name: Run unit tests
-        run: python -m unittest discover -s tests/unit_tests
-
-      - name: Run integration tests
-        run: python -m unittest discover -s tests/integration_tests
+      - name: Run tests
+        run: pytest .
