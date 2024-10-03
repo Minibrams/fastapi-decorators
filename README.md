@@ -11,12 +11,41 @@ Create decorators that leverage FastAPI's `Depends()` and built-in dependencies,
 pip install fastapi-decorators
 ```
 
+# TL;DR
+The library supplies the `add_dependencies()` decorator function which effectively allows you to add argument dependencies to your FastAPI endpoints.
+
+For example, the following three endpoints have the same signature:
+```python
+# Using normal dependencies
+@app.get("/items/{item_id}")
+def read_item(item_id: int, _ = Depends(get_current_user)):
+    ...
+
+# Using add_dependency directly
+@app.get("/items/{item_id}")
+@add_dependencies(Depends(get_current_user))
+def read_item(item_id: int):
+    ...
+
+# Using a custom decorator
+def authorize():
+    def dependency(user = Depends(get_current_user)):
+        return user
+    return add_dependencies(Depends(dependency))
+
+@app.get("/items/{item_id}")
+@authorize()
+def read_item(item_id: int):
+    ...
+```
+
 # Usage examples
 
 - [Logging decorator](#logging-decorator)
 - [Authorization decorator](#authorization-decorator)
 - [Custom Response Header decorator](#custom-response-header-decorator)
 - [Rate Limiting decorator](#rate-limiting-decorator)
+- [Caching decorator](#caching-decorator)
 - [Error Handling decorator](#error-handling-decorator)
 - [Combining Multiple decorators](#combining-multiple-decorators)
 - [Using `add_dependencies()` directly](#using-add_dependencies-directly)
@@ -126,26 +155,70 @@ def limited_endpoint():
 
 ```
 
+## Caching decorator
+Add caching to your endpoints:
+
+```python
+def get_cache() -> dict:
+    return {}  # Use a real cache like Redis or Memcached
+
+def cache_response(max_age: int = 5):
+    def decorator(func):
+
+        # Wrap the endpoint after adding the get_cache dependency
+        @add_dependencies(cache=Depends(get_cache))
+        @wraps(func)
+        def wrapper(*args, cache: dict, **kwargs):
+            key = func.__name__
+
+            if key in cache:
+                timestamp, data = cache[key]
+                if time() - timestamp < max_age:
+                    # Cache hit
+                    return data
+
+            # Cache miss - call the endpoint as usual
+            result = func(*args, **kwargs)
+
+            # Store the result in the cache
+            cache[key] = time(), result
+            return result
+        
+        return wrapper
+    return decorator
+
+@app.get("/cached-data")
+@cache_response(max_age=10)
+def get_cached_data():
+    ...
+```
+
 ## Error Handling decorator
 Create a decorator to handle exceptions and return custom responses:
 
 ```python
 from fastapi_decorators import add_dependencies
 from fastapi import Depends, Response
-import traceback
+
+def get_crash_log_storage() -> list:
+    return []  # Use a real storage like a database
 
 def handle_errors():
-    async def dependency(response: Response):
-        try:
-            yield
-        except Exception as e:
-            response.status_code = 500
-            response.content = f"An error occurred: {str(e)}"
+    def decorator(func):
 
-            # Optionally print the traceback
-            traceback.print_exc()
-
-    return add_dependencies(Depends(dependency))
+        # Wrap the endpoint after adding the crash_logs dependency
+        @add_dependencies(crash_logs = Depends(get_crash_log_storage))
+        @wraps(func)
+        def wrapper(*args, crash_logs: list, **kwargs):
+            try:
+                return func(*args, **kwargs)
+            except Exception as e:
+                # Log the error and return a custom response
+                crash_logs.append({ 'error': str(e), 'function': func.__name__ })
+                return JSONResponse(status_code=500, content={ "detail": str(e) })
+            
+        return wrapper
+    return decorator
 
 @app.get("/may-fail")
 @handle_errors()
