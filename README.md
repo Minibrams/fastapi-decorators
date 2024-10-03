@@ -21,7 +21,7 @@ For example, the following three endpoints have the same signature:
 def read_item(item_id: int, _ = Depends(get_current_user)):
     ...
 
-# Using add_dependency directly
+# Using @depends() directly
 @app.get("/items/{item_id}")
 @depends(Depends(get_current_user))
 def read_item(item_id: int):
