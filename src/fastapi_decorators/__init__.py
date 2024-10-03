@@ -1,3 +1,3 @@
-from .decorators import add_dependencies
+from .decorators import depends
 
-__all__ = ["add_dependencies"]
+__all__ = ["depends"]

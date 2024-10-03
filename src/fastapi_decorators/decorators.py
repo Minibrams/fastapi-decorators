@@ -8,7 +8,7 @@ from typing import Any, Callable, Tuple, TypeVar, cast
 
 F = TypeVar('F', bound=Callable[..., Any])
 
-def add_dependencies(*args: Any, **kwargs: Any) -> Callable[[F], F]:
+def depends(*args: Any, **kwargs: Any) -> Callable[[F], F]:
     """
     Decorator to add dependencies to a function without exposing them as arguments.
 
@@ -18,7 +18,7 @@ def add_dependencies(*args: Any, **kwargs: Any) -> Callable[[F], F]:
 
     ```python
     @app.put("/users/{user_id}")
-    @add_dependencies(Depends(get_admin_roles))
+    @depends(Depends(get_admin_roles))
     def update_user(*, user_id: int, user_update: UserUpdate):
         ...
     ```
@@ -33,7 +33,7 @@ def add_dependencies(*args: Any, **kwargs: Any) -> Callable[[F], F]:
         ):
             # Authorization logic here
             ...
-        return add_dependencies(Depends(dependency))(func)
+        return depends(Depends(dependency))(func)
     ```
 
     **Using the Custom Decorator:**

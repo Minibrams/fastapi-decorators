@@ -12,7 +12,7 @@ pip install fastapi-decorators
 ```
 
 # TL;DR
-The library supplies the `add_dependencies()` decorator function which effectively allows you to add argument dependencies to your FastAPI endpoints.
+The library supplies the `depends()` decorator function which effectively allows you to add argument dependencies to your FastAPI endpoints.
 
 For example, the following three endpoints have the same signature:
 ```python
@@ -23,7 +23,7 @@ def read_item(item_id: int, _ = Depends(get_current_user)):
 
 # Using add_dependency directly
 @app.get("/items/{item_id}")
-@add_dependencies(Depends(get_current_user))
+@depends(Depends(get_current_user))
 def read_item(item_id: int):
     ...
 
@@ -31,7 +31,7 @@ def read_item(item_id: int):
 def authorize():
     def dependency(user = Depends(get_current_user)):
         return user
-    return add_dependencies(Depends(dependency))
+    return depends(Depends(dependency))
 
 @app.get("/items/{item_id}")
 @authorize()
@@ -41,6 +41,7 @@ def read_item(item_id: int):
 
 # Usage examples
 
+- [Using `depends()` directly](#using-depends-directly)
 - [Logging decorator](#logging-decorator)
 - [Authorization decorator](#authorization-decorator)
 - [Custom Response Header decorator](#custom-response-header-decorator)
@@ -48,20 +49,37 @@ def read_item(item_id: int):
 - [Caching decorator](#caching-decorator)
 - [Error Handling decorator](#error-handling-decorator)
 - [Combining Multiple decorators](#combining-multiple-decorators)
-- [Using `add_dependencies()` directly](#using-add_dependencies-directly)
 - [Dependency injection with parameters](#dependency-injection-with-parameters)
+
+## Using `depends()` directly
+If you prefer, you can use depends directly without creating a custom decorator:
+
+```python
+from fastapi_decorators import depends
+from fastapi import Depends, Header
+
+async def verify_api_key(x_api_key: str = Header(...)):
+    if x_api_key != "expected-api-key":
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+@app.get("/secure-data")
+@depends(Depends(verify_api_key))
+def get_secure_data():
+    ...
+
+```
 
 ## Logging decorator
 Add a decorator to log incoming requests:
 
 ```python
-from fastapi_decorators import add_dependencies
+from fastapi_decorators import depends
 from fastapi import Request, Depends
 
 def log_request():
     def dependency(request: Request):
         print(f"Received request: {request.method} {request.url}")
-    return add_dependencies(Depends(dependency))
+    return depends(Depends(dependency))
 
 @app.get("/items/{item_id}")
 @log_request()
@@ -76,7 +94,7 @@ Create a simple decorator that rejects unauthorized requests:
 > because of the added OAuth2 dependency.
 
 ```python
-from fastapi_decorators import add_dependencies
+from fastapi_decorators import depends
 from fastapi import Depends, HTTPException, Header
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
@@ -91,7 +109,7 @@ def authorize(*required_scopes: str):
 
         # Check scopes and permissions
         pass
-    return add_dependencies(Depends(dependency))
+    return depends(Depends(dependency))
 
 
 @app.put("/users/{user_id}")
@@ -105,13 +123,13 @@ def update_user(*, user_id: int, user_update: UserUpdate):
 Create a decorator to add custom headers to responses:
 
 ```python
-from fastapi_decorators import add_dependencies
+from fastapi_decorators import depends
 from fastapi import Response, Depends
 
 def add_custom_header(name: str, value: str):
     def dependency(response: Response):
         response.headers[name] = value
-    return add_dependencies(Depends(dependency))
+    return depends(Depends(dependency))
 
 @app.get("/data")
 @add_custom_header("X-Custom-Header", "MyValue")
@@ -124,7 +142,7 @@ def get_data():
 Add rate limiting to your endpoints:
 
 ```python
-from fastapi_decorators import add_dependencies
+from fastapi_decorators import depends
 from fastapi import Depends, HTTPException, Request
 from time import time
 
@@ -143,7 +161,7 @@ def rate_limit(max_calls: int, period: int):
             raise HTTPException(status_code=429, detail="Too Many Requests")
         calls += 1
         rate_limit_store[ip_address] = (calls, last_reset)
-    return add_dependencies(Depends(dependency))
+    return depends(Depends(dependency))
 
 def get_ip_address(request: Request):
     return request.client.host
@@ -166,7 +184,7 @@ def cache_response(max_age: int = 5):
     def decorator(func):
 
         # Wrap the endpoint after adding the get_cache dependency
-        @add_dependencies(cache=Depends(get_cache))
+        @depends(cache=Depends(get_cache))
         @wraps(func)
         def wrapper(*args, cache: dict, **kwargs):
             key = func.__name__
@@ -197,7 +215,7 @@ def get_cached_data():
 Create a decorator to handle exceptions and return custom responses:
 
 ```python
-from fastapi_decorators import add_dependencies
+from fastapi_decorators import depends
 from fastapi import Depends, Response
 
 def get_crash_log_storage() -> list:
@@ -207,7 +225,7 @@ def handle_errors():
     def decorator(func):
 
         # Wrap the endpoint after adding the crash_logs dependency
-        @add_dependencies(crash_logs = Depends(get_crash_log_storage))
+        @depends(crash_logs = Depends(get_crash_log_storage))
         @wraps(func)
         def wrapper(*args, crash_logs: list, **kwargs):
             try:
@@ -240,29 +258,11 @@ def submit_data(data: DataModel):
 
 ```
 
-## Using `add_dependencies()` directly
-If you prefer, you can use add_dependencies directly without creating a custom decorator:
-
-```python
-from fastapi_decorators import add_dependencies
-from fastapi import Depends, Header
-
-async def verify_api_key(x_api_key: str = Header(...)):
-    if x_api_key != "expected-api-key":
-        raise HTTPException(status_code=403, detail="Forbidden")
-
-@app.get("/secure-data")
-@add_dependencies(Depends(verify_api_key))
-def get_secure_data():
-    ...
-
-```
-
 ## Dependency injection with parameters
 You can pass parameters to your dependencies through closures:
 
 ```python
-from fastapi_decorators import add_dependencies
+from fastapi_decorators import depends
 from fastapi import Depends, HTTPException
 
 def verify_role(required_role: str):
@@ -272,7 +272,7 @@ def verify_role(required_role: str):
     return dependency
 
 @app.get("/admin-area")
-@add_dependencies(Depends(verify_role("admin")))
+@depends(Depends(verify_role("admin")))
 def admin_area():
     ...
 

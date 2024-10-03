@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI, HTTPException, Header, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
-from fastapi_decorators import add_dependencies
+from fastapi_decorators import depends
 
 logging.basicConfig(level=logging.INFO)
 
@@ -75,19 +75,19 @@ def authorize(*required_scopes: str):
         if not token or token != db["access_token"]:
             raise HTTPException(status_code=401, detail="Unauthorized")
         
-    return add_dependencies(Depends(dependency))
+    return depends(Depends(dependency))
 
 def custom_header():
     def dependency(response: Response):
         response.headers["X-Custom-Header"] = "CustomValue"
         return response
-    return add_dependencies(Depends(dependency))
+    return depends(Depends(dependency))
 
 def log():
     async def dependency(request: Request):
         logging.info(f"Request: {request.method} {request.url}")
         return request
-    return add_dependencies(Depends(dependency))
+    return depends(Depends(dependency))
 
 def rate_limit(max_calls: int, period: int):
     async def dependency(
@@ -103,13 +103,13 @@ def rate_limit(max_calls: int, period: int):
             raise HTTPException(status_code=429, detail="Too Many Requests")
         calls_info['calls'] += 1
         rate_limit_store[request_id] = calls_info
-    return add_dependencies(Depends(dependency))
+    return depends(Depends(dependency))
 
 def cache_response(max_age: int = 5):
     def decorator(func):
 
         # Wrap the endpoint after adding the get_cache dependency
-        @add_dependencies(cache=Depends(get_cache))
+        @depends(cache=Depends(get_cache))
         @wraps(func)
         def wrapper(*args, cache: dict, **kwargs):
             key = func.__name__
@@ -132,7 +132,7 @@ def cache_response(max_age: int = 5):
 
 def handle_errors():
     def decorator(func):
-        @add_dependencies(crash_logs = Depends(get_crash_log_storage))
+        @depends(crash_logs = Depends(get_crash_log_storage))
         @wraps(func)
         def wrapper(*args, crash_logs: list, **kwargs):
             try:
@@ -146,16 +146,16 @@ def handle_errors():
 
 app = FastAPI()
 @app.get("/items/")
-@add_dependencies(Depends(get_db), Depends(log_request))
+@depends(Depends(get_db), Depends(log_request))
 def read_items(db: dict = Depends(get_db)):
     """
-    Endpoint to read items, using direct @add_dependencies() notation.
+    Endpoint to read items, using direct @depends() notation.
     """
     items = db["items"]
     return {"items": items}
 
 @app.post("/items/")
-@add_dependencies(Depends(add_custom_header))
+@depends(Depends(add_custom_header))
 def create_item(item: dict, response: Response, db: dict = Depends(get_db)):
     """
     Endpoint to create an item, adding a custom header to the response.
@@ -184,10 +184,10 @@ def generate_report(response: Response):
     return report
 
 @app.put("/users/{user_id}")
-@add_dependencies(Depends(get_db))
+@depends(Depends(get_db))
 def update_user(user_id: int, user_data: UserUpdate, db: dict = Depends(get_db)):
     """
-    Endpoint to update a user, using direct @add_dependencies() notation.
+    Endpoint to update a user, using direct @depends() notation.
     """
     if user_id in db["users"]:
         db["users"][user_id].update(user_data.dict())
