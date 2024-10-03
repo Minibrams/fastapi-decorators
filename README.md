@@ -177,8 +177,10 @@ def limited_endpoint():
 Add caching to your endpoints:
 
 ```python
+cache_storage = {}
+
 def get_cache() -> dict:
-    return {}  # Use a real cache like Redis or Memcached
+    return cache_storage  # Use a real cache like Redis or Memcached
 
 def cache_response(max_age: int = 5):
     def decorator(func):
@@ -218,8 +220,10 @@ Create a decorator to handle exceptions and return custom responses:
 from fastapi_decorators import depends
 from fastapi import Depends, Response
 
+crash_logs = []
+
 def get_crash_log_storage() -> list:
-    return []  # Use a real storage like a database
+    return crash_logs  # Use a real storage like a database
 
 def handle_errors():
     def decorator(func):
