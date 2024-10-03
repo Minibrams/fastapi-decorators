@@ -1,6 +1,6 @@
-from time import sleep
+from time import sleep, time
 from fastapi.testclient import TestClient
-from app import app, fake_db, rate_limit_store, error_log
+from app import app, fake_db, rate_limit_store, cache_storage, error_log
 
 client = TestClient(app)
 
@@ -99,6 +99,22 @@ def test_rate_limiting():
     response = client.get("/limited-endpoint")
     assert response.status_code == 200
 
+def test_cached_response():
+    cache_storage.clear()
+    data1 = client.get("/expensive-operation").json()
+    start = time()
+    data2 = client.get("/expensive-operation").json()
+    end = time()
+
+    assert end - start < 1  # The endpoint takes 5 seconds when not cached
+    assert data1 == data2
+
+    # Wait for the cache to expire
+    sleep(5)
+
+    data3 = client.get("/expensive-operation").json()
+    assert data1 != data3
+
 def test_error_handling_success():
     response = client.get("/may-fail?should_fail=false")
     assert response.status_code == 200
@@ -109,7 +125,7 @@ def test_error_handling_failure():
 
     response = client.get("/may-fail?should_fail=true")
     assert response.status_code == 500
-    assert "An error occurred" in response.json()["detail"]
+    assert len(error_log) == 1
 
     # Check that error was logged
     assert len(error_log) == 1

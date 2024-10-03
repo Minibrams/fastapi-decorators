@@ -4,11 +4,11 @@ import asyncio
 from functools import wraps
 from inspect import Parameter, signature
 from types import MappingProxyType
-from typing import Any, Callable, Dict, Tuple, TypeVar, cast
+from typing import Any, Callable, Tuple, TypeVar, cast
 
 F = TypeVar('F', bound=Callable[..., Any])
 
-def add_dependencies(*dependencies: Any) -> Callable[[F], F]:
+def add_dependencies(*args: Any, **kwargs: Any) -> Callable[[F], F]:
     """
     Decorator to add dependencies to a function without exposing them as arguments.
 
@@ -50,10 +50,10 @@ def add_dependencies(*dependencies: Any) -> Callable[[F], F]:
         original_signature = signature(func)
         original_parameters = original_signature.parameters
 
-        new_parameters = _add_dependency_parameters(dependencies, original_parameters)
+        new_parameters = _add_dependency_parameters(args, kwargs, original_parameters)
         new_signature = original_signature.replace(parameters=tuple(new_parameters.values()))
         
-        wrapper = _create_wrapper(func, original_parameters)
+        wrapper = _create_wrapper(func, new_parameters)
         wrapper.__signature__ = new_signature  # type: ignore
 
         return cast(F, wrapper)
@@ -62,8 +62,9 @@ def add_dependencies(*dependencies: Any) -> Callable[[F], F]:
 
 def _add_dependency_parameters(
     dependencies: Tuple[Any, ...],
+    named_dependencies: dict[str, Any],
     original_parameters: MappingProxyType[str, Parameter],
-) -> Dict[str, Parameter]:
+) -> dict[str, Parameter]:
     """
     Adds dependency parameters to the function's parameters.
 
@@ -84,12 +85,19 @@ def _add_dependency_parameters(
             annotation=Any,
         )
 
-    return new_parameters
+    for name, dependency in named_dependencies.items():
+        new_parameters[name] = Parameter(
+            name,
+            kind=Parameter.KEYWORD_ONLY,
+            default=dependency,
+            annotation=Any,
+        )
 
+    return new_parameters
 
 def _generate_dependency_name(
     index: int, 
-    current_parameters: Dict[str, Parameter],
+    current_parameters: dict[str, Parameter],
 ) -> str:
     """
     Generates a unique name for an anonymous dependency.
@@ -112,7 +120,7 @@ def _generate_dependency_name(
 
 def _create_wrapper(
     func: Callable, 
-    original_parameters: MappingProxyType[str, Parameter],
+    original_parameters: dict[str, Parameter],
 ) -> Callable:
     """
     Creates a wrapper function that filters out dependency arguments.
@@ -128,7 +136,7 @@ def _create_wrapper(
         @wraps(func)
         async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             filtered_kwargs = {
-                k: v for k, v in kwargs.items() if k in original_parameters
+                k: v for k, v in kwargs.items() if k in original_parameters and not k.startswith("__dependency_")
             }
             return await func(*args, **filtered_kwargs)
         return async_wrapper
@@ -136,7 +144,7 @@ def _create_wrapper(
         @wraps(func)
         def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
             filtered_kwargs = {
-                k: v for k, v in kwargs.items() if k in original_parameters
+                k: v for k, v in kwargs.items() if k in original_parameters and not k.startswith("__dependency_")
             }
             return func(*args, **filtered_kwargs)
         return sync_wrapper

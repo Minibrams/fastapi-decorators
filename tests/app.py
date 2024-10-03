@@ -1,10 +1,10 @@
 from functools import wraps
+from inspect import signature
 import logging
-from time import time
+from time import sleep, time
 from fastapi import Depends, FastAPI, HTTPException, Header, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from requests import Session
 
 from fastapi_decorators import add_dependencies
 
@@ -18,6 +18,7 @@ class DataModel(BaseModel):
     value: int
 
 rate_limit_store = {}
+cache_storage = {}
 error_log = []
 fake_db = {
     "access_token": "valid_token",
@@ -35,6 +36,12 @@ fake_db = {
 # Dependencies
 def get_db() -> dict:
     return fake_db
+
+def get_cache() -> dict:
+    return cache_storage
+
+def get_crash_log_storage() -> list:
+    return error_log
 
 def get_rate_limit_store() -> dict:
     return rate_limit_store
@@ -98,17 +105,42 @@ def rate_limit(max_calls: int, period: int):
         rate_limit_store[request_id] = calls_info
     return add_dependencies(Depends(dependency))
 
+def cache_response(max_age: int = 5):
+    def decorator(func):
+
+        # Wrap the endpoint after adding the get_cache dependency
+        @add_dependencies(cache=Depends(get_cache))
+        @wraps(func)
+        def wrapper(*args, cache: dict, **kwargs):
+            key = func.__name__
+
+            if key in cache:
+                timestamp, data = cache[key]
+                if time() - timestamp < max_age:
+                    # Cache hit
+                    return data
+
+            # Cache miss - call the endpoint as usual
+            result = func(*args, **kwargs)
+
+            # Store the result in the cache
+            cache[key] = time(), result
+            return result
+        
+        return wrapper
+    return decorator
+
 def handle_errors():
     def decorator(func):
+        @add_dependencies(crash_logs = Depends(get_crash_log_storage))
         @wraps(func)
-        async def wrapper(*args, **kwargs):
+        def wrapper(*args, crash_logs: list, **kwargs):
             try:
-                return await func(*args, **kwargs)
+                return func(*args, **kwargs)
             except Exception as e:
-                error_message = f"An error occurred: {str(e)}"
-                logging.error(error_message)
-                error_log.append({'error': error_message, 'function': func.__name__})
-                return JSONResponse(status_code=500, content={"detail": error_message})
+                crash_logs.append({ 'error': str(e), 'function': func.__name__ })
+                return JSONResponse(status_code=500, content={ "detail": str(e) })
+            
         return wrapper
     return decorator
 
@@ -185,9 +217,18 @@ def limited_endpoint():
     """
     return {"message": "You have accessed a rate-limited endpoint"}
 
+@app.get("/expensive-operation")
+@cache_response(max_age=5)
+def expensive_operation():
+    """
+    Endpoint that is cached for 5 seconds.
+    """
+    sleep(5)
+    return {"data": time() }
+
 @app.get("/may-fail")
 @handle_errors()
-async def may_fail_operation(should_fail: bool = False):
+def may_fail_operation(should_fail: bool = False):
     """
     Endpoint that may raise exceptions.
     """
