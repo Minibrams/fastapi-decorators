@@ -8,23 +8,45 @@ version = "1.0.6"
 description = "Add dependencies to your endpoints with the @depends decorator."
 readme = "README.md"
 requires-python = ">=3.8"
-license = {file = "LICENSE"}
-authors = [{name = "Anders Brams", email = "anders@brams.dk"}]
-keywords=[
-    "fastapi",
-    "decorators",
-    "middleware",
-    "dependency",
-    "dependencies",
-]
-classifiers=[
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
+license = { file = "LICENSE" }
+authors = [{ name = "Anders Brams", email = "anders@brams.dk" }]
+keywords = ["fastapi", "decorators", "middleware", "dependency", "dependencies"]
+classifiers = [
+    "Intended Audience :: Developers",
     "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3 :: Only",
+    "Topic :: Internet",
+    "Topic :: Software Development",
+    "Topic :: Software Development :: Libraries",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Libraries :: Application Frameworks",
+    "Typing :: Typed",
+    "Development Status :: 4 - Beta",
+    "Framework :: FastAPI",
+    "Environment :: Web Environment",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
+    "Topic :: Internet :: WWW/HTTP",
+]
+dependencies = [
+    "mkdocs-material>=9.5.40",
 ]
 
+[project.urls]
+Homepage = "https://github.com/Minibrams/fastapi-decorators"
+Documentation = "https://github.com/Minibrams/fastapi-decorators"
+Repository = "https://github.com/Minibrams/fastapi-decorators"
+Issues = "https://github.com/Minibrams/fastapi-decorators/issues"
+
 [tool.uv]
-package=true
+package = true
 dev-dependencies = [
     "fastapi>=0.115.0",
     "httpx>=0.27.2",
@@ -35,6 +57,4 @@ dev-dependencies = [
 ]
 
 [tool.hatch.build.targets.sdist]
-include = [
-  "fastapi_decorators/*.py",
-]
+include = ["fastapi_decorators/*.py"]

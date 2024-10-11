@@ -1,0 +1,28 @@
+site_name: FastAPI Decorators
+site_url: https://fastapi-decorators.abrams.dk
+repo_url: https://github.com/Minibrams/fastapi-decorators
+repo_name: fastapi-decorators
+theme:
+  name: material
+  icon:
+    repo: fontawesome/brands/git-alt
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: amber
+      accent: amber
+      toggle:
+        icon: material/toggle-switch
+        name: Switch to dark mode
+
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: amber
+      accent: amber
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Switch to light mode
+
+  features:
+    - content.code.select
+    - content.code.annotate
