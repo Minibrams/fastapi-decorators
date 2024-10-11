@@ -26,6 +26,8 @@ theme:
   features:
     - content.code.select
     - content.code.annotate
+    - toc.follow
+    - navigation.tracking
 
 markdown_extensions:
   - pymdownx.highlight:
@@ -39,3 +41,7 @@ markdown_extensions:
   - pymdownx.details
   - attr_list
   - md_in_html
+  - toc:
+      permalink: true
+      toc_depth: 6
+      title: On this page

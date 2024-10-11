@@ -2,52 +2,54 @@
 
 Create decorators that leverage FastAPI's `Depends()` and built-in dependencies, enabling you to inject dependencies directly into your decorators.
 
-# Installation
+## Installation
 ```bash
 pip install fastapi-decorators
 ```
 
-# TL;DR
-The library supplies the `depends()` decorator function which effectively allows you to add argument dependencies to your FastAPI endpoints.
+## TL;DR
+The library supplies the `depends()` decorator function which allows you to decorate your FastAPI endpoints with dependencies.
 
-For example, the following three endpoints have the same signature:
+
 ```python
-# Using normal dependencies
-@app.get("/items/{item_id}")
-def read_item(item_id: int, _ = Depends(get_current_user)):
-    ...
+from fastapi_decorators import depends
 
-# Using @depends() directly
 @app.get("/items/{item_id}")
 @depends(Depends(get_current_user))
 def read_item(item_id: int):
     ...
+```
 
-# Using a custom decorator
-def authorize():
-    def dependency(user = Depends(get_current_user)):
-        return user
-    return depends(Depends(dependency))
+It can even be used to overwrite the endpoint logic while *still* using dependencies:
 
-@app.get("/items/{item_id}")
-@authorize()
-def read_item(item_id: int):
+```python
+def cached():
+    def decorator(func):
+        @depends(cache=Depends(get_cache))
+        @wraps(func)
+        def wrapper(*args, cache, **kwargs):
+            
+            # Check if we have a cached response
+            if cache.hit():
+                return cache.get()
+
+            # Cache miss - call the endpoint as usual
+            result = func(*args, **kwargs)
+
+            cache.set(result)
+            return result
+        return wrapper
+    return decorator
+
+@app.get("/very-expensive-operation")
+@cached()
+def get_a_very_expensive_resource():
     ...
 ```
 
-# Usage examples
+## Usage examples
 
-- [Using `depends()` directly](#using-depends-directly)
-- [Logging decorator](#logging-decorator)
-- [Authorization decorator](#authorization-decorator)
-- [Custom Response Header decorator](#custom-response-header-decorator)
-- [Rate Limiting decorator](#rate-limiting-decorator)
-- [Caching decorator](#caching-decorator)
-- [Error Handling decorator](#error-handling-decorator)
-- [Combining Multiple decorators](#combining-multiple-decorators)
-- [Dependency injection with parameters](#dependency-injection-with-parameters)
-
-## Using `depends()` directly
+### Using `depends()` directly
 If you prefer, you can use depends directly without creating a custom decorator:
 
 ```python
@@ -65,7 +67,7 @@ def get_secure_data():
 
 ```
 
-## Logging decorator
+### Logging decorator
 Add a decorator to log incoming requests:
 
 ```python
@@ -84,7 +86,7 @@ def read_item(item_id: int):
 
 ```
 
-## Authorization decorator
+### Authorization decorator
 Create a simple decorator that rejects unauthorized requests:
 
 !!! note
@@ -119,7 +121,7 @@ def update_user(*, user_id: int, user_update: UserUpdate):
 
 ```
 
-## Custom Response Header decorator
+### Custom Response Header decorator
 Create a decorator to add custom headers to responses:
 
 ```python
@@ -138,7 +140,7 @@ def get_data():
 
 ```
 
-## Rate Limiting decorator
+### Rate Limiting decorator
 Add rate limiting to your endpoints:
 
 ```python
@@ -173,7 +175,7 @@ def limited_endpoint():
 
 ```
 
-## Caching decorator
+### Caching decorator
 Add caching to your endpoints:
 
 ```python linenums="1" hl_lines="10 12"
@@ -217,7 +219,7 @@ def get_cached_data():
 2. Because we added the `get_cache` dependency with the keyword argument `cache`, we can access it in here. This also works for normal endpoints.
 
 
-## Error Handling decorator
+### Error Handling decorator
 Create a decorator to handle exceptions and return custom responses:
 
 ```python
@@ -253,7 +255,7 @@ def may_fail_operation():
 
 ```
 
-## Combining Multiple decorators
+### Combining Multiple decorators
 You can combine multiple decorators to compose complex behavior:
 
 ```python
@@ -266,7 +268,7 @@ def submit_data(data: DataModel):
 
 ```
 
-## Dependency injection with parameters
+### Dependency injection with parameters
 You can pass parameters to your dependencies through closures:
 
 ```python
@@ -286,5 +288,5 @@ def admin_area():
 
 ```
 
-# Credits
+## Credits
 Inspired by solutions suggested by [@gocreating](https://github.com/gocreating) and [@dmontagu](https://github.com/dmontagu).
