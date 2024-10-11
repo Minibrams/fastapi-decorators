@@ -1,3 +1,40 @@
 [build-system]
-requires = ["setuptools>=43.0.0", "wheel"]
-build-backend = "setuptools.build_meta"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "fastapi-decorators"
+version = "1.0.4"
+description = "Add dependencies to your endpoints with the @depends decorator."
+readme = "README.md"
+requires-python = ">=3.8"
+license = {file = "LICENSE"}
+authors = [{name = "Anders Brams", email = "anders@brams.dk"}]
+keywords=[
+    "fastapi",
+    "decorators",
+    "middleware",
+    "dependency",
+    "dependencies",
+]
+classifiers=[
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
+
+[tool.uv]
+package=true
+dev-dependencies = [
+    "fastapi>=0.115.0",
+    "httpx>=0.27.2",
+    "pyright>=1.1.384",
+    "pytest>=8.3.3",
+    "ruff>=0.6.9",
+    "uvicorn>=0.31.1",
+]
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "fastapi_decorators/*.py",
+]

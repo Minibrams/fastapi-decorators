@@ -1,8 +1,0 @@
-pyright
-setuptools
-fastapi
-uvicorn
-wheel
-twine
-httpx
-pytest

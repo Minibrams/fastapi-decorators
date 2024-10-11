@@ -6,7 +6,8 @@ from inspect import Parameter, signature
 from types import MappingProxyType
 from typing import Any, Callable, Tuple, TypeVar, cast
 
-F = TypeVar('F', bound=Callable[..., Any])
+F = TypeVar("F", bound=Callable[..., Any])
+
 
 def depends(*args: Any, **kwargs: Any) -> Callable[[F], F]:
     """
@@ -51,14 +52,17 @@ def depends(*args: Any, **kwargs: Any) -> Callable[[F], F]:
         original_parameters = original_signature.parameters
 
         new_parameters = _add_dependency_parameters(args, kwargs, original_parameters)
-        new_signature = original_signature.replace(parameters=tuple(new_parameters.values()))
-        
+        new_signature = original_signature.replace(
+            parameters=tuple(new_parameters.values())
+        )
+
         wrapper = _create_wrapper(func, new_parameters)
         wrapper.__signature__ = new_signature  # type: ignore
 
         return cast(F, wrapper)
 
     return decorator
+
 
 def _add_dependency_parameters(
     dependencies: Tuple[Any, ...],
@@ -95,8 +99,9 @@ def _add_dependency_parameters(
 
     return new_parameters
 
+
 def _generate_dependency_name(
-    index: int, 
+    index: int,
     current_parameters: dict[str, Parameter],
 ) -> str:
     """
@@ -119,7 +124,7 @@ def _generate_dependency_name(
 
 
 def _create_wrapper(
-    func: Callable, 
+    func: Callable,
     original_parameters: dict[str, Parameter],
 ) -> Callable:
     """
@@ -133,18 +138,26 @@ def _create_wrapper(
         A wrapper function that excludes dependency arguments when calling the original function.
     """
     if asyncio.iscoroutinefunction(func):
+
         @wraps(func)
         async def async_wrapper(*args: Any, **kwargs: Any) -> Any:
             filtered_kwargs = {
-                k: v for k, v in kwargs.items() if k in original_parameters and not k.startswith("__dependency_")
+                k: v
+                for k, v in kwargs.items()
+                if k in original_parameters and not k.startswith("__dependency_")
             }
             return await func(*args, **filtered_kwargs)
+
         return async_wrapper
     else:
+
         @wraps(func)
         def sync_wrapper(*args: Any, **kwargs: Any) -> Any:
             filtered_kwargs = {
-                k: v for k, v in kwargs.items() if k in original_parameters and not k.startswith("__dependency_")
+                k: v
+                for k, v in kwargs.items()
+                if k in original_parameters and not k.startswith("__dependency_")
             }
             return func(*args, **filtered_kwargs)
+
         return sync_wrapper

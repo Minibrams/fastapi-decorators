@@ -1,8 +1,9 @@
 from time import sleep, time
 from fastapi.testclient import TestClient
-from app import app, fake_db, rate_limit_store, cache_storage, error_log
+from tests.app import app, fake_db, rate_limit_store, cache_storage, error_log
 
 client = TestClient(app)
+
 
 def test_read_items():
     response = client.get("/items/")
@@ -10,6 +11,7 @@ def test_read_items():
     data = response.json()
     assert "items" in data
     assert len(data["items"]) >= 2
+
 
 def test_create_item():
     response = client.post("/items/", json={"name": "NewItem"})
@@ -19,11 +21,13 @@ def test_create_item():
     assert data["message"] == "Item created"
     assert data["item"]["name"] == "NewItem"
 
+
 def test_read_current_user_unauthorized():
     response = client.get("/users/me")
     assert response.status_code == 401
     data = response.json()
     assert data["detail"] == "Unauthorized"
+
 
 def test_read_current_user_authorized():
     headers = {"token": "valid_token"}
@@ -32,12 +36,14 @@ def test_read_current_user_authorized():
     data = response.json()
     assert data["user"] == "user_from_token"
 
+
 def test_generate_report():
     response = client.get("/reports/")
     assert response.status_code == 200
     assert response.headers.get("X-Custom-Header") == "CustomValue"
     data = response.json()
     assert data["report"] == "This is your report"
+
 
 def test_update_user_success():
     user_id = 1
@@ -49,6 +55,7 @@ def test_update_user_success():
     assert data["user"]["name"] == new_data["name"]
     assert data["user"]["email"] == new_data["email"]
 
+
 def test_update_user_not_found():
     user_id = 999
     new_data = {"name": "Ghost User", "email": "ghost@example.com"}
@@ -57,12 +64,14 @@ def test_update_user_not_found():
     data = response.json()
     assert data["detail"] == "User not found"
 
+
 def test_delete_user_unauthorized():
     user_id = 2
     response = client.delete(f"/users/{user_id}")
     assert response.status_code == 401
     data = response.json()
     assert data["detail"] == "Unauthorized"
+
 
 def test_delete_user_success():
     user_id = 2
@@ -73,6 +82,7 @@ def test_delete_user_success():
     assert data["message"] == f"User {user_id} deleted"
     assert user_id not in fake_db["users"]
 
+
 def test_delete_user_not_found():
     user_id = 999
     headers = {"token": "valid_token"}
@@ -80,6 +90,7 @@ def test_delete_user_not_found():
     assert response.status_code == 404
     data = response.json()
     assert data["detail"] == "User not found"
+
 
 def test_rate_limiting():
     rate_limit_store.clear()
@@ -94,31 +105,36 @@ def test_rate_limiting():
     assert response.json()["detail"] == "Too Many Requests"
 
     # Wait for rate limit period to expire
-    sleep(6)
+    sleep(1)
 
     response = client.get("/limited-endpoint")
     assert response.status_code == 200
 
+
 def test_cached_response():
     cache_storage.clear()
+    first_time = time()
     data1 = client.get("/expensive-operation").json()
-    start = time()
+    second_time = time()
     data2 = client.get("/expensive-operation").json()
-    end = time()
+    end_time = time()
 
-    assert end - start < 1  # The endpoint takes 5 seconds when not cached
+    assert second_time - first_time >= 1  # The endpoint takes 1 second when not cached
+    assert end_time - second_time < 0.1  # Should be near-instantaneous when cached
     assert data1 == data2
 
     # Wait for the cache to expire
-    sleep(5)
+    sleep(1)
 
     data3 = client.get("/expensive-operation").json()
     assert data1 != data3
+
 
 def test_error_handling_success():
     response = client.get("/may-fail?should_fail=false")
     assert response.status_code == 200
     assert response.json()["message"] == "Operation succeeded"
+
 
 def test_error_handling_failure():
     error_log.clear()
@@ -129,7 +145,8 @@ def test_error_handling_failure():
 
     # Check that error was logged
     assert len(error_log) == 1
-    assert error_log[0]['function'] == 'may_fail_operation'
+    assert error_log[0]["function"] == "may_fail_operation"
+
 
 def test_error_log_endpoint():
     response = client.get("/error-log")
