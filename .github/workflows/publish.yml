@@ -15,12 +15,6 @@ jobs:
       uses: astral-sh/setup-uv@v3
       with:
         version: "0.4.20"
-    - name: Set up Python
-      uses: actions/setup-python@v5
-      with:
-        python-version: '3.12'
-        cache: pip
-        cache-dependency-path: '**/pyproject.toml'
     - name: Build
       run: uv build --sdist
     - name: Publish
