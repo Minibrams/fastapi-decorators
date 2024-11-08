@@ -24,6 +24,22 @@ def read_item(item_id: int):
     ...
 ```
 
+You can use it to make declarative decorators like so:
+```python
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
+
+def authorize(*required_scopes: str):
+    def dependency(token: str = Depends(oauth2_scheme)):
+        # Your auth logic here
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return depends(Depends(dependency))
+
+
+@app.put("/users/{user_id}")
+@authorize("users:write")
+def update_user(*, user_id: int, user_update: UserUpdate):
+```
+
 It can even be used to overwrite the endpoint logic while *still* using dependencies:
 
 ```python
