@@ -64,5 +64,5 @@ def get_a_very_expensive_resource():
     ...
 ```
 
-# Documentation
-See the documentation [here](https://fastapi-decorators.pages.dev/).
+# Examples
+See decorator examples (auth, caching, rate limiting...) [here](https://fastapi-decorators.pages.dev/).
