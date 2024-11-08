@@ -4,7 +4,7 @@
 [![Python Versions](https://img.shields.io/pypi/pyversions/fastapi-decorators.svg)](https://pypi.org/project/fastapi-decorators/)
 [![Downloads](https://img.shields.io/pypi/dm/fastapi-decorators.svg)](https://pypi.org/project/fastapi-decorators/)
 
-Create decorators that leverage FastAPI's `Depends()` and built-in dependencies, enabling you to inject dependencies directly into your decorators.
+Create decorators with a `@depends()` decorator that leverages FastAPI's `Depends()` and built-in dependencies.
 
 # Installation
 ```bash
