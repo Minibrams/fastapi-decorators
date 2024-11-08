@@ -45,16 +45,13 @@ It can even be used to overwrite the endpoint logic while *still* using dependen
 ```python
 def cached():
     def decorator(func):
-        @depends(cache=Depends(get_cache))
+        @depends(cache=Depends(get_cache))    # Note: Keyword dependency `cache` registered here
         @wraps(func)
-        def wrapper(*args, cache, **kwargs):
-            
-            # Check if we have a cached response
+        def wrapper(*args, cache, **kwargs):  # Note: Keyword dependency `cache` accessible here
             if cache.hit():
                 return cache.get()
 
-            # Cache miss - call the endpoint as usual
-            result = func(*args, **kwargs)
+            result = func(*args, **kwargs)    # Note: Execute the underlying endpoint function as normal
 
             cache.set(result)
             return result
