@@ -45,9 +45,9 @@ It can even be used to overwrite the endpoint logic while *still* using dependen
 ```python
 def cached():
     def decorator(func):
-        @depends(cache=Depends(get_cache))    # Note: Keyword dependency `cache` registered here
+        @depends(cache=Depends(get_cache))    # Note: Dependency `cache` registered here
         @wraps(func)
-        def wrapper(*args, cache, **kwargs):  # Note: Keyword dependency `cache` accessible here
+        def wrapper(*args, cache, **kwargs):  # Note: Dependency `cache` accessible here
             if cache.hit():
                 return cache.get()
 
