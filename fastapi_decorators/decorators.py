@@ -4,12 +4,12 @@ import asyncio
 from functools import wraps
 from inspect import Parameter, signature
 from types import MappingProxyType
-from typing import Any, Callable, Tuple, TypeVar, cast
+from typing import Any, Callable, Tuple
 
-F = TypeVar("F", bound=Callable[..., Any])
+F = Callable[..., Any]
+Decorator = Callable[[F], F]
 
-
-def depends(*args: Any, **kwargs: Any) -> Callable[[F], F]:
+def depends(*args: Any, **kwargs: Any) -> Decorator:
     """
     Decorator to add dependencies to a function without exposing them as arguments.
 
@@ -59,8 +59,7 @@ def depends(*args: Any, **kwargs: Any) -> Callable[[F], F]:
         wrapper = _create_wrapper(func, new_parameters)
         wrapper.__signature__ = new_signature  # type: ignore
 
-        return cast(F, wrapper)
-
+        return wrapper
     return decorator
 
 
@@ -124,9 +123,9 @@ def _generate_dependency_name(
 
 
 def _create_wrapper(
-    func: Callable,
+    func: F,
     original_parameters: dict[str, Parameter],
-) -> Callable:
+) -> F:
     """
     Creates a wrapper function that filters out dependency arguments.
 
