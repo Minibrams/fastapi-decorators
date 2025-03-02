@@ -4,6 +4,10 @@ Create decorators that leverage FastAPI's `Depends()` and built-in dependencies,
 
 ## Installation
 ```bash
+uv add fastapi-decorators
+
+# or
+
 pip install fastapi-decorators
 ```
 

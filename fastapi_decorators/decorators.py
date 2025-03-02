@@ -4,10 +4,9 @@ import asyncio
 from functools import wraps
 from inspect import Parameter, signature
 from types import MappingProxyType
-from typing import Any, Callable, Tuple
+from typing import Any, Tuple
+from .types import Decorator, F
 
-F = Callable[..., Any]
-Decorator = Callable[[F], F]
 
 def depends(*args: Any, **kwargs: Any) -> Decorator:
     """
@@ -60,6 +59,7 @@ def depends(*args: Any, **kwargs: Any) -> Decorator:
         wrapper.__signature__ = new_signature  # type: ignore
 
         return wrapper
+
     return decorator
 
 

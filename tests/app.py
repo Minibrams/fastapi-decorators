@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from fastapi_decorators import depends
-from fastapi_decorators.decorators import F, Decorator
+from fastapi_decorators.types import F, Decorator
 
 logging.basicConfig(level=logging.INFO)
 
