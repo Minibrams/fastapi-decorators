@@ -5,7 +5,7 @@ from tests.app import app, fake_db, rate_limit_store, cache_storage, error_log
 client = TestClient(app)
 
 
-def test_read_items():
+def test_read_items() -> None:
     response = client.get("/items/")
     assert response.status_code == 200
     data = response.json()
@@ -13,7 +13,7 @@ def test_read_items():
     assert len(data["items"]) >= 2
 
 
-def test_create_item():
+def test_create_item() -> None:
     response = client.post("/items/", json={"name": "NewItem"})
     assert response.status_code == 200
     assert response.headers.get("X-Custom-Header") == "CustomValue"
@@ -22,14 +22,14 @@ def test_create_item():
     assert data["item"]["name"] == "NewItem"
 
 
-def test_read_current_user_unauthorized():
+def test_read_current_user_unauthorized() -> None:
     response = client.get("/users/me")
     assert response.status_code == 401
     data = response.json()
     assert data["detail"] == "Unauthorized"
 
 
-def test_read_current_user_authorized():
+def test_read_current_user_authorized() -> None:
     headers = {"token": "valid_token"}
     response = client.get("/users/me", headers=headers)
     assert response.status_code == 200
@@ -37,7 +37,7 @@ def test_read_current_user_authorized():
     assert data["user"] == "user_from_token"
 
 
-def test_generate_report():
+def test_generate_report() -> None:
     response = client.get("/reports/")
     assert response.status_code == 200
     assert response.headers.get("X-Custom-Header") == "CustomValue"
@@ -45,7 +45,7 @@ def test_generate_report():
     assert data["report"] == "This is your report"
 
 
-def test_update_user_success():
+def test_update_user_success() -> None:
     user_id = 1
     new_data = {"name": "John Updated", "email": "john_updated@example.com"}
     response = client.put(f"/users/{user_id}", json=new_data)
@@ -56,7 +56,7 @@ def test_update_user_success():
     assert data["user"]["email"] == new_data["email"]
 
 
-def test_update_user_not_found():
+def test_update_user_not_found() -> None:
     user_id = 999
     new_data = {"name": "Ghost User", "email": "ghost@example.com"}
     response = client.put(f"/users/{user_id}", json=new_data)
@@ -65,7 +65,7 @@ def test_update_user_not_found():
     assert data["detail"] == "User not found"
 
 
-def test_delete_user_unauthorized():
+def test_delete_user_unauthorized() -> None:
     user_id = 2
     response = client.delete(f"/users/{user_id}")
     assert response.status_code == 401
@@ -73,7 +73,7 @@ def test_delete_user_unauthorized():
     assert data["detail"] == "Unauthorized"
 
 
-def test_delete_user_success():
+def test_delete_user_success() -> None:
     user_id = 2
     headers = {"token": "valid_token"}
     response = client.delete(f"/users/{user_id}", headers=headers)
@@ -83,7 +83,7 @@ def test_delete_user_success():
     assert user_id not in fake_db["users"]
 
 
-def test_delete_user_not_found():
+def test_delete_user_not_found() -> None:
     user_id = 999
     headers = {"token": "valid_token"}
     response = client.delete(f"/users/{user_id}", headers=headers)
@@ -92,7 +92,7 @@ def test_delete_user_not_found():
     assert data["detail"] == "User not found"
 
 
-def test_rate_limiting():
+def test_rate_limiting() -> None:
     rate_limit_store.clear()
 
     for _ in range(5):
@@ -111,7 +111,7 @@ def test_rate_limiting():
     assert response.status_code == 200
 
 
-def test_cached_response():
+def test_cached_response() -> None:
     cache_storage.clear()
     first_time = time()
     data1 = client.get("/expensive-operation").json()
@@ -130,13 +130,13 @@ def test_cached_response():
     assert data1 != data3
 
 
-def test_error_handling_success():
+def test_error_handling_success() -> None:
     response = client.get("/may-fail?should_fail=false")
     assert response.status_code == 200
     assert response.json()["message"] == "Operation succeeded"
 
 
-def test_error_handling_failure():
+def test_error_handling_failure() -> None:
     error_log.clear()
 
     response = client.get("/may-fail?should_fail=true")
@@ -148,7 +148,7 @@ def test_error_handling_failure():
     assert error_log[0]["function"] == "may_fail_operation"
 
 
-def test_error_log_endpoint():
+def test_error_log_endpoint() -> None:
     response = client.get("/error-log")
     assert response.status_code == 200
     data = response.json()

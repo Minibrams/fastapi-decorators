@@ -1,11 +1,13 @@
 from functools import wraps
 import logging
 from time import sleep, time
+from typing import Any
 from fastapi import Depends, FastAPI, HTTPException, Header, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 
 from fastapi_decorators import depends
+from fastapi_decorators.decorators import F, Decorator
 
 logging.basicConfig(level=logging.INFO)
 
@@ -19,10 +21,10 @@ class DataModel(BaseModel):
     value: int
 
 
-rate_limit_store = {}
-cache_storage = {}
-error_log = []
-fake_db = {
+rate_limit_store: dict[str, Any] = {}
+cache_storage: dict[str, Any] = {}
+error_log: list[Any] = []
+fake_db: dict[str, Any] = {
     "access_token": "valid_token",
     "users": {
         1: {"name": "John Doe", "email": "john@example.com"},
@@ -36,25 +38,25 @@ fake_db = {
 
 
 # Dependencies
-def get_db() -> dict:
+def get_db() -> dict[str, Any]:
     return fake_db
 
 
-def get_cache() -> dict:
+def get_cache() -> dict[str, Any]:
     return cache_storage
 
 
-def get_crash_log_storage() -> list:
+def get_crash_log_storage() -> list[Any]:
     return error_log
 
 
-def get_rate_limit_store() -> dict:
+def get_rate_limit_store() -> dict[str, Any]:
     return rate_limit_store
 
 
 def get_current_user(
     token: str = Header(None),
-    db: dict = Depends(get_db),
+    db: dict[str, Any] = Depends(get_db),
 ) -> str:
     if not token or token != db["access_token"]:
         raise HTTPException(status_code=401, detail="Unauthorized")
@@ -62,53 +64,56 @@ def get_current_user(
     return user
 
 
-def log_request(request: Request):
+def log_request(request: Request) -> Request:
     logging.info(f"Request: {request.method} {request.url}")
     return request
 
 
-def add_custom_header(response: Response):
+def add_custom_header(response: Response) -> Response:
     response.headers["X-Custom-Header"] = "CustomValue"
     return response
 
 
 def get_request_id(request: Request) -> str:
+    if request.client is None:
+        raise HTTPException(status_code=400, detail="Invalid request")
+
     return request.client.host
 
 
 # Decorators
-def authorize(*required_scopes: str):
+def authorize() -> Decorator:
     async def dependency(
         token: str = Header(None),
-        db: dict = Depends(get_db),
-    ):
+        db: dict[str, Any] = Depends(get_db),
+    ) -> None:
         if not token or token != db["access_token"]:
             raise HTTPException(status_code=401, detail="Unauthorized")
 
     return depends(Depends(dependency))
 
 
-def custom_header():
-    def dependency(response: Response):
+def custom_header() -> Decorator:
+    def dependency(response: Response) -> Response:
         response.headers["X-Custom-Header"] = "CustomValue"
         return response
 
     return depends(Depends(dependency))
 
 
-def log():
-    async def dependency(request: Request):
+def log() -> Decorator:
+    async def dependency(request: Request) -> Request:
         logging.info(f"Request: {request.method} {request.url}")
         return request
 
     return depends(Depends(dependency))
 
 
-def rate_limit(max_calls: int, period: int):
+def rate_limit(max_calls: int, period: int) -> Decorator:
     async def dependency(
         request_id: str = Depends(get_request_id),
-        rate_limit_store: dict = Depends(get_rate_limit_store),
-    ):
+        rate_limit_store: dict[str, Any] = Depends(get_rate_limit_store),
+    ) -> None:
         calls_info = rate_limit_store.get(
             request_id, {"calls": 0, "last_reset": time()}
         )
@@ -124,12 +129,16 @@ def rate_limit(max_calls: int, period: int):
     return depends(Depends(dependency))
 
 
-def cache_response(max_age: int = 5):
-    def decorator(func):
+def cache_response(max_age: int = 5) -> Decorator:
+    def decorator(func: F) -> F:
         # Wrap the endpoint after adding the get_cache dependency
         @depends(cache=Depends(get_cache))
         @wraps(func)
-        def wrapper(*args, cache: dict, **kwargs):
+        def wrapper(
+            *args: Any,
+            cache: dict[str, Any],
+            **kwargs: Any,
+        ) -> Any:
             key = func.__name__
 
             if key in cache:
@@ -150,11 +159,15 @@ def cache_response(max_age: int = 5):
     return decorator
 
 
-def handle_errors():
-    def decorator(func):
+def handle_errors() -> Decorator:
+    def decorator(func: F) -> F:
         @depends(crash_logs=Depends(get_crash_log_storage))
         @wraps(func)
-        def wrapper(*args, crash_logs: list, **kwargs):
+        def wrapper(
+            *args: Any,
+            crash_logs: list[Any],
+            **kwargs: Any,
+        ) -> Any:
             try:
                 return func(*args, **kwargs)
             except Exception as e:
@@ -171,7 +184,7 @@ app = FastAPI()
 
 @app.get("/items/")
 @depends(Depends(get_db), Depends(log_request))
-def read_items(db: dict = Depends(get_db)):
+def read_items(db: dict[str, Any] = Depends(get_db)) -> dict[str, Any]:
     """
     Endpoint to read items, using direct @depends() notation.
     """
@@ -181,7 +194,11 @@ def read_items(db: dict = Depends(get_db)):
 
 @app.post("/items/")
 @depends(Depends(add_custom_header))
-def create_item(item: dict, response: Response, db: dict = Depends(get_db)):
+def create_item(
+    item: dict[str, Any],
+    response: Response,
+    db: dict[str, Any] = Depends(get_db),
+) -> dict[str, Any]:
     """
     Endpoint to create an item, adding a custom header to the response.
     """
@@ -193,7 +210,7 @@ def create_item(item: dict, response: Response, db: dict = Depends(get_db)):
 @app.get("/users/me")
 @log()
 @authorize()
-def read_current_user(current_user: str = Depends(get_current_user)):
+def read_current_user(current_user: str = Depends(get_current_user)) -> dict[str, Any]:
     """
     Endpoint to read the current user, using custom decorators for logging and authorization.
     """
@@ -203,7 +220,7 @@ def read_current_user(current_user: str = Depends(get_current_user)):
 @app.get("/reports/")
 @log()
 @custom_header()
-def generate_report(response: Response):
+def generate_report(response: Response) -> dict[str, Any]:
     """
     Endpoint that generates a report, using custom decorators for logging and adding a header.
     """
@@ -213,7 +230,11 @@ def generate_report(response: Response):
 
 @app.put("/users/{user_id}")
 @depends(Depends(get_db))
-def update_user(user_id: int, user_data: UserUpdate, db: dict = Depends(get_db)):
+def update_user(
+    user_id: int,
+    user_data: UserUpdate,
+    db: dict[str, Any] = Depends(get_db),
+) -> dict[str, Any]:
     """
     Endpoint to update a user, using direct @depends() notation.
     """
@@ -228,7 +249,10 @@ def update_user(user_id: int, user_data: UserUpdate, db: dict = Depends(get_db))
 @log()
 @custom_header()
 @authorize()
-def delete_user(user_id: int, db: dict = Depends(get_db)):
+def delete_user(
+    user_id: int,
+    db: dict[str, Any] = Depends(get_db),
+) -> dict[str, Any]:
     """
     Endpoint to delete a user, using custom decorators for logging, adding a header, and authorization.
     """
@@ -241,7 +265,7 @@ def delete_user(user_id: int, db: dict = Depends(get_db)):
 
 @app.get("/limited-endpoint")
 @rate_limit(max_calls=5, period=1)
-def limited_endpoint():
+def limited_endpoint() -> dict[str, Any]:
     """
     Endpoint that is rate-limited.
     """
@@ -250,7 +274,7 @@ def limited_endpoint():
 
 @app.get("/expensive-operation")
 @cache_response(max_age=1)
-def expensive_operation():
+def expensive_operation() -> dict[str, Any]:
     """
     Endpoint that is cached for 1 second.
     """
@@ -260,7 +284,7 @@ def expensive_operation():
 
 @app.get("/may-fail")
 @handle_errors()
-def may_fail_operation(should_fail: bool = False):
+def may_fail_operation(should_fail: bool = False) -> dict[str, Any]:
     """
     Endpoint that may raise exceptions.
     """
@@ -270,5 +294,5 @@ def may_fail_operation(should_fail: bool = False):
 
 
 @app.get("/error-log")
-def get_error_log():
+def get_error_log() -> list[Any]:
     return error_log
