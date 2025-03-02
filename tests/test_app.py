@@ -1,5 +1,6 @@
 from time import sleep, time
 from fastapi.testclient import TestClient
+import pytest
 from tests.app import app, fake_db, rate_limit_store, cache_storage, error_log
 
 client = TestClient(app)
@@ -37,8 +38,15 @@ def test_read_current_user_authorized() -> None:
     assert data["user"] == "user_from_token"
 
 
-def test_generate_report() -> None:
-    response = client.get("/reports/")
+@pytest.mark.parametrize(
+    "url",
+    [
+        "/header-test-v1/",
+        "/header-test-v2/",
+    ],
+)
+def test_generate_report(url: str) -> None:
+    response = client.get(url)
     assert response.status_code == 200
     assert response.headers.get("X-Custom-Header") == "CustomValue"
     data = response.json()

@@ -12,29 +12,43 @@ pip install fastapi-decorators
 ```
 
 # TL;DR <!-- omit in toc -->
-The library supplies the `depends()` decorator function which allows you to decorate your FastAPI endpoints with dependencies.
+The library supplies the `depends()` decorator function which converts any function to a decorator that resolves the FastAPI dependencies declared in the function parameters.
 
 
+Create dependency-enabled decorators simply by using `@depends`:
 ```python
-from fastapi_decorators import depends
+from fastapi import Request, Depends, HTTPException
+
+@depends
+def authenticate(request: Request, db = Depends(get_db)):
+    if db.get_user(request.headers['user_id']) is None:
+        raise HTTPException(status_code=401, detail="Unauthenticated")
 
 @app.get("/items/{item_id}")
-@depends(Depends(get_current_user))
+@authenticate
 def read_item(item_id: int):
     ...
 ```
 
-You can use it to make declarative decorators like so:
+You can use it to make decorator factories like so:
 ```python
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
+def authorize(scope: str):
+    @depends
+    def dependency(token: str = Depends(oauth2_scheme)):
+        if scope not in token.scopes:
+            raise HTTPException(status_code=403, detail="Unauthorized")
+
+    return dependency
+
+# ... or in the explicit form:
 def authorize(scope: str):
     def dependency(token: str = Depends(oauth2_scheme)):
         if scope not in token.scopes:
             raise HTTPException(status_code=403, detail="Unauthorized")
 
-    return depends(Depends(dependency))
-
+    return depends(dependency)
 
 # Use it:
 @app.put("/users/{user_id}")
@@ -71,6 +85,7 @@ A more detailed version of the documentation is available [here](https://fastapi
 
 - [Usage examples](#usage-examples)
   - [Using `depends()` directly](#using-depends-directly)
+  - [Simple decorator](#simple-decorator)
   - [Logging decorator](#logging-decorator)
   - [Authorization decorator](#authorization-decorator)
   - [Custom Response Header decorator](#custom-response-header-decorator)
@@ -101,6 +116,9 @@ def get_secure_data():
 
 ```
 
+## Simple decorator
+The simplest way to create 
+
 ## Logging decorator
 Add a decorator to log incoming requests:
 
@@ -108,13 +126,12 @@ Add a decorator to log incoming requests:
 from fastapi_decorators import depends
 from fastapi import Request, Depends
 
-def log_request():
-    def dependency(request: Request):
-        print(f"Received request: {request.method} {request.url}")
-    return depends(Depends(dependency))
+@depends
+def log_request(request: Request):
+    print(f"Received request: {request.method} {request.url}")
 
 @app.get("/items/{item_id}")
-@log_request()
+@log_request
 def read_item(item_id: int):
     ...
 
@@ -143,7 +160,7 @@ def authorize(*scopes: str):
         if not all(scope in token.scopes for scope in scopes):
             raise HTTPException(status_code=403, detail="Unauthorized")
 
-    return depends(Depends(dependency))
+    return depends(dependency)
 
 
 @app.put("/users/{user_id}")
@@ -163,7 +180,7 @@ from fastapi import Response, Depends
 def add_custom_header(name: str, value: str):
     def dependency(response: Response):
         response.headers[name] = value
-    return depends(Depends(dependency))
+    return depends(dependency)
 
 @app.get("/data")
 @add_custom_header("X-Custom-Header", "MyValue")
@@ -195,7 +212,7 @@ def rate_limit(max_calls: int, period: int):
             raise HTTPException(status_code=429, detail="Too Many Requests")
         calls += 1
         rate_limit_store[ip_address] = (calls, last_reset)
-    return depends(Depends(dependency))
+    return depends(dependency)
 
 def get_ip_address(request: Request):
     return request.client.host
@@ -314,7 +331,7 @@ def verify_role(required_role: str):
     return dependency
 
 @app.get("/admin-area")
-@depends(Depends(verify_role("admin")))
+@depends(verify_role("admin"))
 def admin_area():
     ...
 
@@ -331,7 +348,7 @@ def authorize() -> Decorator:
     async def dependency(...) -> None:
         ...
 
-    return depends(Depends(dependency))
+    return depends(dependency)
 
 def cache_response(...) -> Decorator:
     def decorator(func: F) -> F:

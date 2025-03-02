@@ -4,15 +4,25 @@ import asyncio
 from functools import wraps
 from inspect import Parameter, signature
 from types import MappingProxyType
-from typing import Any, Tuple
+from typing import Any, Tuple, Union
+
+from fastapi import Depends, params
+
+
 from .types import Decorator, F
 
 
 def depends(*args: Any, **kwargs: Any) -> Decorator:
     """
-    Decorator to add dependencies to a function without exposing them as arguments.
+    Decorator to add FastAPI dependencies to a function without exposing them as arguments.
 
-    This is particularly useful in frameworks like FastAPI, where dependencies can be injected.
+    The @depends decorator ensures that the decorated function is registered as a FastAPI dependency.
+    As such, the two following examples are equivalent:
+
+    ```python
+    @depends(Depends(authenticate_user))
+    @depends(authenticate_user)
+    ```
 
     **Usage Example:**
 
@@ -33,7 +43,7 @@ def depends(*args: Any, **kwargs: Any) -> Decorator:
         ):
             # Authorization logic here
             ...
-        return depends(Depends(dependency))(func)
+        return depends(Depends(dependency))
     ```
 
     **Using the Custom Decorator:**
@@ -84,7 +94,7 @@ def _add_dependency_parameters(
         new_parameters[name] = Parameter(
             name,
             kind=Parameter.KEYWORD_ONLY,
-            default=dependency,
+            default=_ensure_dependency(dependency),
             annotation=Any,
         )
 
@@ -92,7 +102,7 @@ def _add_dependency_parameters(
         new_parameters[name] = Parameter(
             name,
             kind=Parameter.KEYWORD_ONLY,
-            default=dependency,
+            default=_ensure_dependency(dependency),
             annotation=Any,
         )
 
@@ -160,3 +170,13 @@ def _create_wrapper(
             return func(*args, **filtered_kwargs)
 
         return sync_wrapper
+
+
+def _ensure_dependency(func: Union[F, params.Depends]) -> params.Depends:
+    """
+    Ensures that a dependency is registered as a FastAPI dependency.
+    """
+    if not isinstance(func, params.Depends):
+        return Depends(func)
+
+    return func

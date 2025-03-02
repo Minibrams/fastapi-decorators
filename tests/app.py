@@ -90,7 +90,7 @@ def authorize() -> Decorator:
         if not token or token != db["access_token"]:
             raise HTTPException(status_code=401, detail="Unauthorized")
 
-    return depends(Depends(dependency))
+    return depends(dependency)
 
 
 def custom_header() -> Decorator:
@@ -98,15 +98,27 @@ def custom_header() -> Decorator:
         response.headers["X-Custom-Header"] = "CustomValue"
         return response
 
-    return depends(Depends(dependency))
+    return depends(dependency)
 
 
-def log() -> Decorator:
-    async def dependency(request: Request) -> Request:
-        logging.info(f"Request: {request.method} {request.url}")
-        return request
+def custom_header_func() -> Decorator:
+    def dependency(response: Response) -> Response:
+        response.headers["X-Custom-Header"] = "CustomValue"
+        return response
 
-    return depends(Depends(dependency))
+    return depends(dependency)
+
+
+@depends
+def custom_header_shorthand(response: Response) -> Response:
+    response.headers["X-Custom-Header"] = "CustomValue"
+    return response
+
+
+@depends
+async def log(request: Request) -> Request:
+    logging.info(f"Request: {request.method} {request.url}")
+    return request
 
 
 def rate_limit(max_calls: int, period: int) -> Decorator:
@@ -126,7 +138,7 @@ def rate_limit(max_calls: int, period: int) -> Decorator:
         calls_info["calls"] += 1
         rate_limit_store[request_id] = calls_info
 
-    return depends(Depends(dependency))
+    return depends(dependency)
 
 
 def cache_response(max_age: int = 5) -> Decorator:
@@ -196,7 +208,6 @@ def read_items(db: dict[str, Any] = Depends(get_db)) -> dict[str, Any]:
 @depends(Depends(add_custom_header))
 def create_item(
     item: dict[str, Any],
-    response: Response,
     db: dict[str, Any] = Depends(get_db),
 ) -> dict[str, Any]:
     """
@@ -208,7 +219,7 @@ def create_item(
 
 
 @app.get("/users/me")
-@log()
+@log
 @authorize()
 def read_current_user(current_user: str = Depends(get_current_user)) -> dict[str, Any]:
     """
@@ -217,12 +228,33 @@ def read_current_user(current_user: str = Depends(get_current_user)) -> dict[str
     return {"user": current_user}
 
 
-@app.get("/reports/")
-@log()
+@app.get("/header-test-v1/")
 @custom_header()
-def generate_report(response: Response) -> dict[str, Any]:
+def header_test() -> dict[str, Any]:
     """
-    Endpoint that generates a report, using custom decorators for logging and adding a header.
+    Endpoint that generates a report, using custom decorators adding a header.
+    """
+    report = {"report": "This is your report"}
+    return report
+
+
+@app.get("/header-test-v2/")
+@custom_header_func()
+def header_test_func() -> dict[str, Any]:
+    """
+    Endpoint that generates a report, using custom decorators adding a header.
+    The header is added with a function-only dependency.
+    """
+    report = {"report": "This is your report"}
+    return report
+
+
+@app.get("/header-test-v3/")
+@custom_header_shorthand
+def header_test_annotated() -> dict[str, Any]:
+    """
+    Endpoint that generates a report, using custom decorators adding a header.
+    The header is added with a dependency created with the short-hand definition style.
     """
     report = {"report": "This is your report"}
     return report
@@ -246,7 +278,7 @@ def update_user(
 
 
 @app.delete("/users/{user_id}")
-@log()
+@log
 @custom_header()
 @authorize()
 def delete_user(
@@ -296,3 +328,9 @@ def may_fail_operation(should_fail: bool = False) -> dict[str, Any]:
 @app.get("/error-log")
 def get_error_log() -> list[Any]:
     return error_log
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(app, host="0.0.0.0", port=8000)
