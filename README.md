@@ -16,11 +16,12 @@ pip install fastapi-decorators
 ```
 
 # TL;DR <!-- omit in toc -->
-The library supplies the `depends()` decorator function which converts any function to a decorator that resolves the FastAPI dependencies.
+The library supplies the `depends()` decorator function which converts any function to a decorator that resolves FastAPI dependencies.
 
 
 Create dependency-enabled decorators simply by using `@depends`:
 ```python
+from fastapi_decorators import depends
 from fastapi import Request, Depends, HTTPException
 
 @depends
