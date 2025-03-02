@@ -8,11 +8,15 @@ Create decorators with a `@depends()` decorator that leverages FastAPI's `Depend
 
 # Installation <!-- omit in toc -->
 ```bash
+uv add fastapi-decorators
+
+# or
+
 pip install fastapi-decorators
 ```
 
 # TL;DR <!-- omit in toc -->
-The library supplies the `depends()` decorator function which converts any function to a decorator that resolves the FastAPI dependencies declared in the function parameters.
+The library supplies the `depends()` decorator function which converts any function to a decorator that resolves the FastAPI dependencies.
 
 
 Create dependency-enabled decorators simply by using `@depends`:
@@ -21,7 +25,7 @@ from fastapi import Request, Depends, HTTPException
 
 @depends
 def authenticate(request: Request, db = Depends(get_db)):
-    if db.get_user(request.headers['user_id']) is None:
+    if db.get_user(request.headers['x-user-id']) is None:
         raise HTTPException(status_code=401, detail="Unauthenticated")
 
 @app.get("/items/{item_id}")
