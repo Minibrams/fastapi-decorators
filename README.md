@@ -21,6 +21,7 @@ The library supplies the `depends()` decorator function which converts any funct
 
 Create dependency-enabled decorators simply by using `@depends`:
 ```python
+from fastapi_decorators import depends
 from fastapi import Request, Depends, HTTPException
 
 @depends
