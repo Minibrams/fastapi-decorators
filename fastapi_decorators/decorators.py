@@ -172,7 +172,7 @@ def _create_wrapper(
         return sync_wrapper
 
 
-def _ensure_dependency(func: Union[F, params.Depends]) -> params.Depends:
+def _ensure_dependency(func: Union[F, params.Depends]) -> Union[params.Depends, Any]:
     """
     Ensures that a dependency is registered as a FastAPI dependency.
     """
