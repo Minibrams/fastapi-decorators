@@ -70,20 +70,20 @@ def get_a_very_expensive_resource():
 A more detailed version of the documentation is available [here](https://fastapi-decorators.pages.dev/).
 
 - [Usage examples](#usage-examples)
-    - [Using `depends()` directly](#using-depends-directly)
-    - [Logging decorator](#logging-decorator)
-    - [Authorization decorator](#authorization-decorator)
-    - [Custom Response Header decorator](#custom-response-header-decorator)
-    - [Rate Limiting decorator](#rate-limiting-decorator)
-    - [Caching decorator](#caching-decorator)
-    - [Error Handling decorator](#error-handling-decorator)
-    - [Combining Multiple decorators](#combining-multiple-decorators)
-    - [Dependency injection with parameters](#dependency-injection-with-parameters)
-    - [Satisfying type checkers](#satisfying-type-checkers)
-  - [Credits](#credits)
+  - [Using `depends()` directly](#using-depends-directly)
+  - [Logging decorator](#logging-decorator)
+  - [Authorization decorator](#authorization-decorator)
+  - [Custom Response Header decorator](#custom-response-header-decorator)
+  - [Rate Limiting decorator](#rate-limiting-decorator)
+  - [Caching decorator](#caching-decorator)
+  - [Error Handling decorator](#error-handling-decorator)
+  - [Combining Multiple decorators](#combining-multiple-decorators)
+  - [Dependency injection with parameters](#dependency-injection-with-parameters)
+  - [Satisfying type checkers](#satisfying-type-checkers)
+- [Credits](#credits)
 
 
-### Using `depends()` directly
+## Using `depends()` directly
 If you prefer, you can use depends directly without creating a custom decorator:
 
 ```python
@@ -101,7 +101,7 @@ def get_secure_data():
 
 ```
 
-### Logging decorator
+## Logging decorator
 Add a decorator to log incoming requests:
 
 ```python
@@ -120,7 +120,7 @@ def read_item(item_id: int):
 
 ```
 
-### Authorization decorator
+## Authorization decorator
 Create a simple decorator that rejects unauthorized requests:
 
 > The API docs will reflect the authentication requirement for this endpoint
@@ -153,7 +153,7 @@ def update_user(*, user_id: int, user_update: UserUpdate):
 
 ```
 
-### Custom Response Header decorator
+## Custom Response Header decorator
 Create a decorator to add custom headers to responses:
 
 ```python
@@ -172,7 +172,7 @@ def get_data():
 
 ```
 
-### Rate Limiting decorator
+## Rate Limiting decorator
 Add rate limiting to your endpoints:
 
 ```python
@@ -207,7 +207,7 @@ def limited_endpoint():
 
 ```
 
-### Caching decorator
+## Caching decorator
 Add caching to your endpoints:
 
 ```python
@@ -251,7 +251,7 @@ def get_cached_data():
 2. Because we added the `get_cache` dependency with the keyword argument `cache`, we can access it in here. This also works for normal endpoints.
 
 
-### Error Handling decorator
+## Error Handling decorator
 Create a decorator to handle exceptions and return custom responses:
 
 ```python
@@ -287,7 +287,7 @@ def may_fail_operation():
 
 ```
 
-### Combining Multiple decorators
+## Combining Multiple decorators
 You can combine multiple decorators to compose complex behavior:
 
 ```python
@@ -300,7 +300,7 @@ def submit_data(data: DataModel):
 
 ```
 
-### Dependency injection with parameters
+## Dependency injection with parameters
 You can pass parameters to your dependencies through closures:
 
 ```python
@@ -320,7 +320,7 @@ def admin_area():
 
 ```
 
-### Satisfying type checkers
+## Satisfying type checkers
 If you're using a type checker like Mypy with a `strict` configuration, the library exposes two useful types `Decorator` and `F` for satisfying type checks on decorators and their decorated functions:
 
 ```python
@@ -335,7 +335,7 @@ def authorize() -> Decorator:
 
 def cache_response(...) -> Decorator:
     def decorator(func: F) -> F:
-        
+
         @depends(cache=Depends(get_cache))
         @wraps(func)
         def wrapper(...) -> Any:
@@ -345,6 +345,6 @@ def cache_response(...) -> Decorator:
     return decorator
 ```
 
-## Credits
+# Credits
 Inspired by solutions suggested by [@gocreating](https://github.com/gocreating) and [@dmontagu](https://github.com/dmontagu).
 
