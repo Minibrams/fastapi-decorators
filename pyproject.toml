@@ -35,9 +35,7 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
     "Topic :: Internet :: WWW/HTTP",
 ]
-dependencies = [
-    "mkdocs-material>=9.5.40",
-]
+dependencies = ["mkdocs-material>=9.5.40", "typing-extensions>=4.12.2"]
 
 [project.urls]
 Homepage = "https://github.com/Minibrams/fastapi-decorators"
@@ -50,6 +48,7 @@ package = true
 dev-dependencies = [
     "fastapi>=0.115.0",
     "httpx>=0.27.2",
+    "mypy>=1.14.1",
     "pyright>=1.1.384",
     "pytest>=8.3.3",
     "ruff>=0.6.9",
@@ -58,3 +57,10 @@ dev-dependencies = [
 
 [tool.hatch.build.targets.sdist]
 include = ["fastapi_decorators/*.py"]
+
+[tool.mypy]
+strict = true
+disallow_untyped_decorators = true
+
+[tool.pyright]
+strict = ["fastapi_decorators/*.py", "tests/*.py"]
