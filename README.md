@@ -1,4 +1,5 @@
 # FastAPI decorators <!-- omit in toc -->
+
 ![CI](https://github.com/Minibrams/fastapi-decorators/actions/workflows/ci.yml/badge.svg)
 [![PyPI](https://img.shields.io/pypi/v/fastapi-decorators.svg)](https://pypi.org/project/fastapi-decorators/)
 [![Python Versions](https://img.shields.io/pypi/pyversions/fastapi-decorators.svg)](https://pypi.org/project/fastapi-decorators/)
@@ -7,6 +8,7 @@
 Create decorators with a `@depends()` decorator that leverages FastAPI's `Depends()` and built-in dependencies.
 
 # Installation <!-- omit in toc -->
+
 ```bash
 uv add fastapi-decorators
 
@@ -16,10 +18,11 @@ pip install fastapi-decorators
 ```
 
 # TL;DR <!-- omit in toc -->
+
 The library supplies the `depends()` decorator function which converts any function to a decorator that resolves FastAPI dependencies.
 
-
 Create dependency-enabled decorators simply by using `@depends`:
+
 ```python
 from fastapi_decorators import depends
 from fastapi import Request, Depends, HTTPException
@@ -36,6 +39,7 @@ def read_item(item_id: int):
 ```
 
 You can use it to make decorator factories like so:
+
 ```python
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
@@ -61,7 +65,7 @@ def authorize(scope: str):
 def update_user(*, user_id: int, user_update: UserUpdate):
 ```
 
-It can even be used to overwrite the endpoint logic while *still* using dependencies:
+It can even be used to overwrite the endpoint logic while _still_ using dependencies:
 
 ```python
 def cached():
@@ -86,11 +90,13 @@ def get_a_very_expensive_resource():
 ```
 
 # Usage examples
+
 A more detailed version of the documentation is available [here](https://fastapi-decorators.pages.dev/).
 
 - [Usage examples](#usage-examples)
   - [Using `depends()` directly](#using-depends-directly)
   - [Simple decorator](#simple-decorator)
+  - [Decorator factory](#decorator-factory)
   - [Logging decorator](#logging-decorator)
   - [Authorization decorator](#authorization-decorator)
   - [Custom Response Header decorator](#custom-response-header-decorator)
@@ -102,8 +108,8 @@ A more detailed version of the documentation is available [here](https://fastapi
   - [Satisfying type checkers](#satisfying-type-checkers)
 - [Credits](#credits)
 
-
 ## Using `depends()` directly
+
 If you prefer, you can use depends directly without creating a custom decorator:
 
 ```python
@@ -122,14 +128,73 @@ def get_secure_data():
 ```
 
 ## Simple decorator
-The simplest way to create 
 
-## Logging decorator
-Add a decorator to log incoming requests:
+The simplest way to create a decorator is to simply convert a function into a dependency decorator with `@depends`:
 
 ```python
 from fastapi_decorators import depends
 from fastapi import Request, Depends
+
+@depends
+def audit_request(request: Request, db: Session = Depends(get_db)):
+    log = AuditLog(request.host.ip, request.url.path)
+    db.add(log)
+    db.commit()
+
+@app.get('/users/')
+@audit_request
+def get_users():
+    ...
+```
+
+If preferred, the non-decorator syntax can also be used:
+
+```python
+from fastapi_decorators import depends
+from fastapi import Request, Depends
+
+
+def audit_request():
+    def dependency(request: Request, db: Session = Depends(get_db)):
+        log = AuditLog(request.host.ip, request.url.path)
+        db.add(log)
+        db.commit()
+
+    return depends(dependency)
+
+@app.get('/users/')
+@audit_request()
+def get_users():
+    ...
+```
+
+## Decorator factory
+
+In some cases, you need to provide variations of the same dependency.
+To do this, create a decorator factory:
+
+```python
+def require_headers(*headers: str):
+    def dependency(request: Request):
+        if not all(header in request.headers for header in headers):
+            raise HTTPException(status=400, detail="Required headers not provided.")
+
+    return depends(dependency)
+
+
+@app.put("/users/{user_id}")
+@require_headers("X-API-KEY", "X-TENANT-ID")
+def update_user(*, user_id: int, user_update: UserUpdate):
+    ...
+```
+
+## Logging decorator
+
+Add a decorator to log incoming requests:
+
+```python
+from fastapi_decorators import depends
+from fastapi import Request
 
 @depends
 def log_request(request: Request):
@@ -143,11 +208,11 @@ def read_item(item_id: int):
 ```
 
 ## Authorization decorator
+
 Create a simple decorator that rejects unauthorized requests:
 
 > The API docs will reflect the authentication requirement for this endpoint
-because of the added OAuth2 dependency.
-
+> because of the added OAuth2 dependency.
 
 ```python
 from fastapi_decorators import depends
@@ -176,6 +241,7 @@ def update_user(*, user_id: int, user_update: UserUpdate):
 ```
 
 ## Custom Response Header decorator
+
 Create a decorator to add custom headers to responses:
 
 ```python
@@ -195,6 +261,7 @@ def get_data():
 ```
 
 ## Rate Limiting decorator
+
 Add rate limiting to your endpoints:
 
 ```python
@@ -230,6 +297,7 @@ def limited_endpoint():
 ```
 
 ## Caching decorator
+
 Add caching to your endpoints:
 
 ```python
@@ -259,7 +327,7 @@ def cache_response(max_age: int = 5):
             # Store the result in the cache
             cache[key] = time(), result
             return result
-        
+
         return wrapper
     return decorator
 
@@ -272,8 +340,8 @@ def get_cached_data():
 1. We add the `get_cache` dependency with a keyword argument so we can access it in the wrapper function later.
 2. Because we added the `get_cache` dependency with the keyword argument `cache`, we can access it in here. This also works for normal endpoints.
 
-
 ## Error Handling decorator
+
 Create a decorator to handle exceptions and return custom responses:
 
 ```python
@@ -298,7 +366,7 @@ def handle_errors():
                 # Log the error and return a custom response
                 crash_logs.append({ 'error': str(e), 'function': func.__name__ })
                 return JSONResponse(status_code=500, content={ "detail": str(e) })
-            
+
         return wrapper
     return decorator
 
@@ -310,6 +378,7 @@ def may_fail_operation():
 ```
 
 ## Combining Multiple decorators
+
 You can combine multiple decorators to compose complex behavior:
 
 ```python
@@ -323,6 +392,7 @@ def submit_data(data: DataModel):
 ```
 
 ## Dependency injection with parameters
+
 You can pass parameters to your dependencies through closures:
 
 ```python
@@ -343,6 +413,7 @@ def admin_area():
 ```
 
 ## Satisfying type checkers
+
 If you're using a type checker like Mypy with a `strict` configuration, the library exposes two useful types `Decorator` and `F` for satisfying type checks on decorators and their decorated functions:
 
 ```python
@@ -368,5 +439,5 @@ def cache_response(...) -> Decorator:
 ```
 
 # Credits
-Inspired by solutions suggested by [@gocreating](https://github.com/gocreating) and [@dmontagu](https://github.com/dmontagu).
 
+Inspired by solutions suggested by [@gocreating](https://github.com/gocreating) and [@dmontagu](https://github.com/dmontagu).
