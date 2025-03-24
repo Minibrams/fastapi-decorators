@@ -35,7 +35,7 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
     "Topic :: Internet :: WWW/HTTP",
 ]
-dependencies = ["mkdocs-material>=9.5.40", "typing-extensions>=4.12.2"]
+dependencies = ["typing-extensions>=4.12.2"]
 
 [project.urls]
 Homepage = "https://github.com/Minibrams/fastapi-decorators"
@@ -53,6 +53,7 @@ dev-dependencies = [
     "pytest>=8.3.3",
     "ruff>=0.6.9",
     "uvicorn>=0.31.1",
+    "mkdocs-material>=9.5.40",
 ]
 
 [tool.hatch.build.targets.sdist]
