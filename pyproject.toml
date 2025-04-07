@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fastapi-decorators"
-version = "1.0.11"
+version = "1.0.12"
 description = "Create decorators for your endpoints using FastAPI dependencies."
 readme = "README.md"
 requires-python = ">=3.8"
@@ -35,7 +35,7 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: HTTP Servers",
     "Topic :: Internet :: WWW/HTTP",
 ]
-dependencies = ["typing-extensions>=4.12.2"]
+dependencies = ["fastapi>=0.70.0"]
 
 [project.urls]
 Homepage = "https://github.com/Minibrams/fastapi-decorators"
@@ -46,7 +46,6 @@ Issues = "https://github.com/Minibrams/fastapi-decorators/issues"
 [tool.uv]
 package = true
 dev-dependencies = [
-    "fastapi>=0.115.0",
     "httpx>=0.27.2",
     "mypy>=1.14.1",
     "pyright>=1.1.384",
@@ -62,6 +61,7 @@ include = ["fastapi_decorators/*.py"]
 [tool.mypy]
 strict = true
 disallow_untyped_decorators = true
+warn_unused_ignores = false
 
 [tool.pyright]
 strict = ["fastapi_decorators/*.py", "tests/*.py"]
