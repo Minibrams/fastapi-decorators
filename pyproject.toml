@@ -61,6 +61,7 @@ include = ["fastapi_decorators/*.py"]
 [tool.mypy]
 strict = true
 disallow_untyped_decorators = true
+warn_unused_ignores = false
 
 [tool.pyright]
 strict = ["fastapi_decorators/*.py", "tests/*.py"]
