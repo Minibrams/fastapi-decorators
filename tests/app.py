@@ -272,7 +272,7 @@ def update_user(
     """
     if user_id in db["users"]:
         db["users"][user_id].update(
-            user_data.model_dump()
+            user_data.model_dump()  # type: ignore
             if hasattr(user_data, "model_dump")
             else user_data.dict()
         )

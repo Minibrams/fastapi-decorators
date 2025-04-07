@@ -187,11 +187,10 @@ wheels = [
 
 [[package]]
 name = "fastapi-decorators"
-version = "1.0.11"
+version = "1.0.12"
 source = { editable = "." }
 dependencies = [
     { name = "fastapi" },
-    { name = "typing-extensions" },
 ]
 
 [package.dev-dependencies]
@@ -207,10 +206,7 @@ dev = [
 ]
 
 [package.metadata]
-requires-dist = [
-    { name = "fastapi", specifier = "==0.115.12" },
-    { name = "typing-extensions", specifier = ">=4.12.2" },
-]
+requires-dist = [{ name = "fastapi", specifier = ">=0.70.0" }]
 
 [package.metadata.requires-dev]
 dev = [
