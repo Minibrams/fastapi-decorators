@@ -4,6 +4,7 @@ repo_url: https://github.com/Minibrams/fastapi-decorators
 repo_name: fastapi-decorators
 theme:
   name: material
+  custom_dir: docs-overrides
   icon:
     repo: fontawesome/brands/git-alt
   palette:
