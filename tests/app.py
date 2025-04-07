@@ -271,7 +271,11 @@ def update_user(
     Endpoint to update a user, using direct @depends() notation.
     """
     if user_id in db["users"]:
-        db["users"][user_id].update(user_data.model_dump())
+        db["users"][user_id].update(
+            user_data.model_dump()
+            if hasattr(user_data, "model_dump")
+            else user_data.dict()
+        )
         return {"message": f"User {user_id} updated", "user": db["users"][user_id]}
     else:
         raise HTTPException(status_code=404, detail="User not found")
