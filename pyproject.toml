@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "fastapi-decorators"
-version = "1.0.13"
+version = "1.0.14"
 description = "Create decorators for your endpoints using FastAPI dependencies."
 readme = "README.md"
 requires-python = ">=3.8"
