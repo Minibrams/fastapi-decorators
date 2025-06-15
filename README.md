@@ -25,11 +25,14 @@ Create dependency-enabled decorators simply by using `@depends`:
 
 ```python
 from fastapi_decorators import depends
-from fastapi import Request, Depends, HTTPException
+from fastapi import HTTPException
+from fastapi.security import OAuth2PasswordBearer
+
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 
 @depends
-def authenticate(request: Request, db = Depends(get_db)):
-    if db.get_user(request.headers['x-user-id']) is None:
+def authenticate(token: str | None = Depends(oauth2_scheme)):
+    if token is None:
         raise HTTPException(status_code=401, detail="Unauthenticated")
 
 @app.get("/items/{item_id}")
@@ -46,20 +49,12 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token")
 def authorize(scope: str):
     @depends
     def dependency(token: str = Depends(oauth2_scheme)):
-        if scope not in token.scopes:
+        jwt = decode_jwt(token)
+        if scope not in jwt.scopes:
             raise HTTPException(status_code=403, detail="Unauthorized")
 
     return dependency
 
-# ... or in the explicit form:
-def authorize(scope: str):
-    def dependency(token: str = Depends(oauth2_scheme)):
-        if scope not in token.scopes:
-            raise HTTPException(status_code=403, detail="Unauthorized")
-
-    return depends(dependency)
-
-# Use it:
 @app.put("/users/{user_id}")
 @authorize("users:write")
 def update_user(*, user_id: int, user_update: UserUpdate):
