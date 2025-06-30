@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import sys
 from functools import wraps
 from inspect import Parameter, signature
 from types import MappingProxyType
@@ -67,6 +68,11 @@ def depends(*args: Any, **kwargs: Any) -> Decorator:
 
         wrapper = _create_wrapper(func, new_parameters)
         wrapper.__signature__ = new_signature  # type: ignore
+
+        # TODO: Can we do this a different way?
+        decorated_module = sys.modules[func.__module__]
+        for k, v in decorated_module.__dict__.items():
+            wrapper.__globals__[k] = v
 
         return wrapper
 
