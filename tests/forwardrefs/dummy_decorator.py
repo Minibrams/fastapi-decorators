@@ -4,7 +4,7 @@ from typing import Any
 from fastapi import Depends
 
 from fastapi_decorators import depends
-from fastapi_decorators.types import F, Decorator
+from fastapi_decorators.types import F
 
 
 def get_nothing() -> None:

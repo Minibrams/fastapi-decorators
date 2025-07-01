@@ -1,11 +1,10 @@
 from __future__ import annotations
 
 import asyncio
-import sys
 from functools import wraps
-from inspect import Parameter, signature
+from inspect import Parameter, signature, unwrap
 from types import MappingProxyType
-from typing import Any, Tuple, Union
+from typing import Any, Tuple, Union, get_type_hints
 
 from fastapi import Depends, params
 
@@ -58,21 +57,35 @@ def depends(*args: Any, **kwargs: Any) -> Decorator:
     """
 
     def decorator(func: F) -> F:
-        original_signature = signature(func)
-        original_parameters = original_signature.parameters
+        original_func = unwrap(func)
+        original_signature = signature(func, follow_wrapped=True)
 
-        new_parameters = _add_dependency_parameters(args, kwargs, original_parameters)
-        new_signature = original_signature.replace(
-            parameters=tuple(new_parameters.values())
+        hints = get_type_hints(
+            original_func,
+            globalns=original_func.__globals__,
+            localns=None,
         )
 
-        wrapper = _create_wrapper(func, new_parameters)
-        wrapper.__signature__ = new_signature  # type: ignore
+        resolved_params: dict[str, Parameter] = {}
+        for name, param in original_signature.parameters.items():
+            anno = hints.get(name, param.annotation)
+            resolved_params[name] = param.replace(annotation=anno)
 
-        # TODO: Can we do this a different way?
-        decorated_module = sys.modules[func.__module__]
-        for k, v in decorated_module.__dict__.items():
-            wrapper.__globals__[k] = v
+        dep_params = _add_dependency_parameters(
+            args,
+            kwargs,
+            MappingProxyType(resolved_params),
+        )
+
+        all_params = {**resolved_params, **dep_params}
+
+        new_signature = original_signature.replace(
+            parameters=tuple(all_params.values()),
+            return_annotation=hints.get("return", original_signature.return_annotation),
+        )
+
+        wrapper = _create_wrapper(func, all_params)
+        wrapper.__signature__ = new_signature  # type: ignore
 
         return wrapper
 
