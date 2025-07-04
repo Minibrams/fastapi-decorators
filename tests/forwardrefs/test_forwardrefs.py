@@ -39,7 +39,7 @@ def test_forward_references_are_copied_from_call_site_scope(
 def test_forward_references_plus_annotation(
     test_client: TestClient,
 ) -> None:
-    @test_client.app.get("/test-extra")
+    @test_client.app.get("/test-extra")  # type: ignore[attr-defined,misc]
     @empty_decorator
     def endpoint_with_request_dependency(
         request: Request,
