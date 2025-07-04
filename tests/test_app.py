@@ -161,3 +161,10 @@ def test_error_log_endpoint() -> None:
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
+
+
+def test_expects_header() -> None:
+    headers = {"requestor_id": "potato@me"}
+    response = client.get("/headers", headers=headers)
+    assert response.status_code == 200
+    assert response.json() == headers

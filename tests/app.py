@@ -1,7 +1,7 @@
 from functools import wraps
 import logging
 from time import sleep, time
-from typing import Any
+from typing import Annotated, Any
 from fastapi import Depends, FastAPI, HTTPException, Header, Request, Response
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -332,6 +332,17 @@ def may_fail_operation(should_fail: bool = False) -> dict[str, Any]:
 @app.get("/error-log")
 def get_error_log() -> list[Any]:
     return error_log
+
+
+@app.get("/headers")
+@log
+def expects_header(
+    requestor_id: Annotated[str, Header(alias="requestor_id")],
+) -> dict[str, str]:
+    """
+    Endpoint that returns current annotated requestor_id.
+    """
+    return {"requestor_id": requestor_id}
 
 
 if __name__ == "__main__":
