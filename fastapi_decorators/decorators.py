@@ -64,6 +64,7 @@ def depends(*args: Any, **kwargs: Any) -> Decorator:
             original_func,
             globalns=original_func.__globals__,
             localns=None,
+            include_extras=True,
         )
 
         resolved_params: dict[str, Parameter] = {}
