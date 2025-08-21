@@ -1,9 +1,8 @@
 # FastAPI decorators <!-- omit in toc -->
 
 ![CI](https://github.com/Minibrams/fastapi-decorators/actions/workflows/ci.yml/badge.svg)
-[![PyPI](https://img.shields.io/pypi/v/fastapi-decorators.svg)](https://pypi.org/project/fastapi-decorators/)
-[![Python Versions](https://img.shields.io/pypi/pyversions/fastapi-decorators.svg)](https://pypi.org/project/fastapi-decorators/)
-[![Downloads](https://img.shields.io/pypi/dm/fastapi-decorators.svg)](https://pypi.org/project/fastapi-decorators/)
+[![PyPI](https://img.shields.io/pypi/v/fastapi-decorators?style=plastic&color=2334D058.svg)](https://pypi.org/project/fastapi-decorators/)
+[![Python Versions](https://img.shields.io/pypi/pyversions/fastapi-decorators?style=plastic&color=2334D058.svg)](https://pypi.org/project/fastapi-decorators/)
 
 Create decorators with a `@depends()` decorator that leverages FastAPI's `Depends()` and built-in dependencies.
 
