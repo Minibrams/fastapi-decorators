@@ -56,7 +56,12 @@ dev-dependencies = [
 ]
 
 [tool.hatch.build.targets.sdist]
-include = ["fastapi_decorators/*.py"]
+packages = ["fastapi_decorators"]
+include = ["fastapi_decorators/py.typed"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["fastapi_decorators"]
+include = ["fastapi_decorators/py.typed"]
 
 [tool.mypy]
 strict = true
