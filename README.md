@@ -85,8 +85,6 @@ def get_a_very_expensive_resource():
 
 # Usage examples
 
-A more detailed version of the documentation is available [here](https://fastapi-decorators.abrams.dk/).
-
 - [Usage examples](#usage-examples)
   - [Using `depends()` directly](#using-depends-directly)
   - [Simple decorator](#simple-decorator)
