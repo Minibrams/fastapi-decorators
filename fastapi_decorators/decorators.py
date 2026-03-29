@@ -82,7 +82,7 @@ def depends(*args: Any, **kwargs: Any) -> Decorator:
 
         new_signature = original_signature.replace(
             parameters=tuple(all_params.values()),
-            return_annotation=hints.get("return", original_signature.return_annotation),
+            return_annotation=original_signature.return_annotation,
         )
 
         wrapper = _create_wrapper(func, all_params)
