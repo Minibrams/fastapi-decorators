@@ -1,7 +1,9 @@
 from time import sleep, time
+from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 import pytest
 from tests.app import app, fake_db, rate_limit_store, cache_storage, error_log
+from fastapi_decorators import depends
 
 client = TestClient(app)
 
@@ -168,3 +170,22 @@ def test_expects_header() -> None:
     response = client.get("/headers", headers=headers)
     assert response.status_code == 200
     assert response.json() == headers
+
+
+def test_depends_keeps_none_return_annotation_for_204() -> None:
+    test_app = FastAPI()
+
+    @depends
+    def with_test() -> None:
+        pass
+
+    @test_app.get("/test", status_code=status.HTTP_204_NO_CONTENT)
+    @with_test
+    async def endpoint() -> None:
+        pass
+
+    assert endpoint is not None
+    test_client = TestClient(test_app)
+    response = test_client.get("/test")
+    assert response.status_code == status.HTTP_204_NO_CONTENT
+    assert response.content == b""
