@@ -1,6 +1,6 @@
 from functools import wraps
 import logging
-from time import sleep, time
+from time import time
 from typing import Annotated, Any
 from fastapi import Depends, FastAPI, HTTPException, Header, Request, Response
 from fastapi.responses import JSONResponse
@@ -23,6 +23,7 @@ class DataModel(BaseModel):
 
 rate_limit_store: dict[str, Any] = {}
 cache_storage: dict[str, Any] = {}
+expensive_operation_stats: dict[str, int] = {"calls": 0}
 error_log: list[Any] = []
 fake_db: dict[str, Any] = {
     "access_token": "valid_token",
@@ -314,8 +315,8 @@ def expensive_operation() -> dict[str, Any]:
     """
     Endpoint that is cached for 1 second.
     """
-    sleep(1)
-    return {"data": time()}
+    expensive_operation_stats["calls"] += 1
+    return {"data": expensive_operation_stats["calls"]}
 
 
 @app.get("/may-fail")

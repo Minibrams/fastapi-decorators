@@ -1,8 +1,14 @@
-from time import sleep, time
 from fastapi import FastAPI, status
 from fastapi.testclient import TestClient
 import pytest
-from tests.app import app, fake_db, rate_limit_store, cache_storage, error_log
+from tests.app import (
+    app,
+    cache_storage,
+    error_log,
+    expensive_operation_stats,
+    fake_db,
+    rate_limit_store,
+)
 from fastapi_decorators import depends
 
 client = TestClient(app)
@@ -114,8 +120,9 @@ def test_rate_limiting() -> None:
     assert response.status_code == 429
     assert response.json()["detail"] == "Too Many Requests"
 
-    # Wait for rate limit period to expire
-    sleep(1)
+    # Force rate-limit window expiry
+    request_id = next(iter(rate_limit_store))
+    rate_limit_store[request_id]["last_reset"] -= 2
 
     response = client.get("/limited-endpoint")
     assert response.status_code == 200
@@ -123,21 +130,24 @@ def test_rate_limiting() -> None:
 
 def test_cached_response() -> None:
     cache_storage.clear()
-    first_time = time()
+    expensive_operation_stats["calls"] = 0
+
     data1 = client.get("/expensive-operation").json()
-    second_time = time()
+    assert expensive_operation_stats["calls"] == 1
+
     data2 = client.get("/expensive-operation").json()
-    end_time = time()
 
-    assert second_time - first_time >= 1  # The endpoint takes 1 second when not cached
-    assert end_time - second_time < 0.1  # Should be near-instantaneous when cached
     assert data1 == data2
+    assert expensive_operation_stats["calls"] == 1
 
-    # Wait for the cache to expire
-    sleep(1)
+    # Force cache expiry
+    cache_key = "expensive_operation"
+    timestamp, cached_data = cache_storage[cache_key]
+    cache_storage[cache_key] = (timestamp - 2, cached_data)
 
     data3 = client.get("/expensive-operation").json()
     assert data1 != data3
+    assert expensive_operation_stats["calls"] == 2
 
 
 def test_error_handling_success() -> None:
