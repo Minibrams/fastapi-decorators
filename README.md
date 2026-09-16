@@ -29,13 +29,13 @@ from fastapi.security import OAuth2PasswordBearer
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="token", auto_error=False)
 
-@depends
+@depends       <----- Create a new decorator
 def authenticate(token: str | None = Depends(oauth2_scheme)):
     if token is None:
         raise HTTPException(status_code=401, detail="Unauthenticated")
 
 @app.get("/items/{item_id}")
-@authenticate
+@authenticate  <----- Use the new decorator
 def read_item(item_id: int):
     ...
 ```
